@@ -1,7 +1,9 @@
 package com.example.demo.Auth;
 
 import com.example.demo.Email.EmailService;
+import com.example.demo.Security.JwtService;
 import com.example.demo.User.Roles;
+import com.example.demo.User.UserDTO;
 import com.example.demo.User.Users;
 import com.example.demo.User.UsersRepository;
 import jakarta.servlet.http.Cookie;
@@ -26,8 +28,8 @@ public class AuthenticationService {
     private final UsersRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final JwtService jwtService;
 
-    // Register the user and send an email with a verification token
     public RegisterResponse register(RegisterRequest request, HttpServletResponse response) {
         Optional<Users> userOptional = userRepository.findByEmail(request.getEmail());
 
@@ -37,13 +39,12 @@ public class AuthenticationService {
             }
 
             String token = generateVerificationToken();
-            setTokenInCookie(response, token);
+            setTokenInCookie(response, userOptional.get().getEmail(), token);
             emailService.sendVerificationToken(userOptional.get().getEmail(), token);
 
             return new RegisterResponse("Success. Verification token sent via email.", "PENDING_EMAIL_CONFIRMATION");
         }
 
-        // Register new user
         Users user = Users.builder()
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
@@ -52,72 +53,152 @@ public class AuthenticationService {
                 .role(Roles.user)
                 .isProfileCompleted(false)
                 .dateOfBirth(request.getDateOfBirth())
+                .phoneNumber(request.getPhoneNumber())
                 .createdAt(new Date())
+                .isFirstLogin(true)
                 .build();
 
         userRepository.save(user);
 
-        // Generate verification token and send via email
         String token = generateVerificationToken();
-        setTokenInCookie(response, token);
+        setTokenInCookie(response, user.getEmail(), token);
         emailService.sendVerificationToken(user.getEmail(), token);
 
         return new RegisterResponse("Success. Verification token sent via email.", "PENDING_EMAIL_CONFIRMATION");
     }
 
-    // Verifies the email using the token from the cookie
-    public ResponseEntity<String> verifyEmail(HttpServletRequest request) {
+    public RegisterResponse confirmEmail(String token, HttpServletRequest request) {
+        if (token == null || token.isEmpty()) {
+            return (new RegisterResponse("Missing token.", "ERROR"));
+        }
+
         Cookie[] cookies = request.getCookies();
+
         if (cookies != null) {
             for (Cookie cookie : cookies) {
                 if ("verification_token".equals(cookie.getName())) {
-                    String token = cookie.getValue();
+                    String storedToken = cookie.getValue();
+                    System.out.println("Stored token: " + storedToken);
+                    System.out.println("Token: " + token);
 
-                    // Validate the token
-                    if (isTokenValid(token)) {
-                        // Extract user email from the request or cookies and mark the email as verified
+                    if (storedToken.equals(token)) {
                         Optional<Users> userOptional = userRepository.findByEmail(extractUserEmailFromRequest(request));
+                        System.out.println("User email: " + extractUserEmailFromRequest(request));
+
                         if (userOptional.isPresent()) {
                             Users user = userOptional.get();
-                            user.setProfileCompleted(true); // Mark profile as completed
-                            userRepository.save(user); // Save the user
 
-                            return ResponseEntity.ok("Email verified successfully.");
+                            if (user.isEnabled()) {
+                                return (new RegisterResponse("Account already verified.", "ERROR"));
+                            }
+
+                            user.setProfileCompleted(true);
+                            userRepository.save(user);
+
+                            return (new RegisterResponse("Account verified.", "SUCCESS"));
                         } else {
-                            return ResponseEntity.status(401).body("Invalid or expired token.");
+                            return (new RegisterResponse("User not found.", "ERROR"));
                         }
                     } else {
-                        return ResponseEntity.status(401).body("Invalid or expired token.");
+                        return (new RegisterResponse("Invalid token.", "ERROR"));
                     }
                 }
             }
         }
-        return ResponseEntity.status(400).body("Verification token not found.");
+
+        return (new RegisterResponse("Token not found in cookies.", "ERROR"));
     }
 
-    // Helper methods
     private String generateVerificationToken() {
-        return UUID.randomUUID().toString();
+
+        String token = UUID.randomUUID().toString();
+        System.out.println("Token: " + token);
+
+        return token;
     }
 
-    private boolean isTokenValid(String token) {
-        return token != null && !token.isEmpty();
-    }
-
-    private void setTokenInCookie(HttpServletResponse response, String token) {
-        ResponseCookie cookie = ResponseCookie.from("verification_token", token)
+    private void setTokenInCookie(HttpServletResponse response,String email, String token) {
+        ResponseCookie tokenCookie = ResponseCookie.from("verification_token", token)
                 .httpOnly(true)
                 .secure(true)
                 .path("/")
                 .maxAge(60 * 60 * 24) // 1 day expiration
                 .build();
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        ResponseCookie emailCookie = ResponseCookie.from("user_email", email)
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(60 * 60 * 24)
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, tokenCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, emailCookie.toString());
     }
 
     private String extractUserEmailFromRequest(HttpServletRequest request) {
-        // You might use the email from the request body, query parameter, or cookie
-        // In this example, I'm just assuming it's from the request for simplicity
-        return request.getParameter("email");
+        Cookie cookie[] = request.getCookies();
+        for(Cookie c : cookie){
+            if(c.getName().equals("user_email")){
+                return c.getValue();
+            }
+        }
+        return null;
+
+    }
+
+    public LoginResponse login(LoginRequest request, HttpServletResponse response) {
+        Optional<Users> userOptional = userRepository.findByEmail(request.getEmail());
+
+        if (userOptional.isEmpty()) {
+            return new LoginResponse("User not found", null);
+        }
+
+        Users user = userOptional.get();
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+            return new LoginResponse("Invalid credentials", null);
+        }
+
+        if (!user.isEnabled()) {
+            return new LoginResponse("Account not verified", null);
+        }
+
+        String jwtToken = jwtService.generateToken(user);
+        setJwtTokenInCookie(response, jwtToken);
+
+        UserDTO userDTO = UserDTO.builder()
+                .id(user.getId())
+                .role(user.getRole())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .email(user.getEmail())
+                .phoneNumber(user.getPhoneNumber())
+                .dateOfBirth(user.getDateOfBirth())
+                .bio(user.getBio())
+                .profilePicture(user.getProfilePicture())
+//                .organizationId(user.getOrganizationId()) //TODO: match organizationId with Organization entity
+                .regionId(user.getRegionId())
+                .isFirstLogin(user.isFirstLogin())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .build();
+
+
+        if(user.isFirstLogin())
+            user.setFirstLogin(false);
+
+        return new LoginResponse("Login successful", userDTO);
+    }
+
+    private void setJwtTokenInCookie(HttpServletResponse response, String jwtToken) {
+        ResponseCookie tokenCookie = ResponseCookie.from("auth_token", jwtToken)
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(60 * 60 * 24)
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, tokenCookie.toString());
     }
 }
 

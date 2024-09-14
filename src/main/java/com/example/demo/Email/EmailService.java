@@ -24,7 +24,9 @@ public class EmailService {
             helper.setFrom("epetitiimd@gmail.com");
             helper.setTo(email);
             msg.setSubject("Verification Email");
-            String htmlContent = "";
+            String htmlContent = "<h1>Verification Email</h1>" +
+                    "<p>Click the link below to verify your email address.</p>" +
+                    "<a href='http://localhost:8080/api/auth/confirm-email?token=" + token + "'>Verify Email</a>";
             helper.setText(htmlContent, true);
             javaMailSender.send(msg);
         } catch (MessagingException e) {

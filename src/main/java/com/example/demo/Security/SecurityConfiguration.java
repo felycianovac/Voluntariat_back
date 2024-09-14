@@ -39,6 +39,7 @@ public class SecurityConfiguration {
                 .build();
         return new InMemoryUserDetailsManager(user);
     }
+    //TODO: restrict /admin access to only users with role ADMIN
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
         http.csrf((csrf)->csrf.disable())

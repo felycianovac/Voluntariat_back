@@ -44,14 +44,16 @@ public class Users implements UserDetails{
     private String profilePicture;
     @Column(name = "is_profile_completed")
     private boolean isProfileCompleted;
-    @Column(name = "locality_id")
-    private int localityId;
+    @Column(name = "region_id")
+    private int regionId;
     @Column(name = "created_at")
     private Date createdAt;
     @Column(name = "updated_at")
     private Date updatedAt;
+    @Column(name = "is_first_login")
+    private boolean isFirstLogin;
 
-    //TODO: match localityId with Locality entity
+    //TODO: match regionId with Region entity
 
 
     @Override
