@@ -166,26 +166,12 @@ public class AuthenticationService {
         String jwtToken = jwtService.generateToken(user);
         setJwtTokenInCookie(response, jwtToken);
 
-        UserDTO userDTO = UserDTO.builder()
-                .id(user.getUserId())
-                .role(user.getRole())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .email(user.getEmail())
-                .phoneNumber(user.getPhoneNumber())
-                .dateOfBirth(user.getDateOfBirth())
-                .bio(user.getBio())
-                .profilePicture(user.getProfilePicture())
-//                .organizationId(user.getOrganizationId()) //TODO: match organizationId with Organization entity
-                .regionId(user.getRegionId())
-                .isFirstLogin(user.isFirstLogin())
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
-                .build();
+        UserDTO userDTO = UserDTO.fromEntity(user);
 
-
-        if(user.isFirstLogin())
+        if (user.isFirstLogin()) {
             user.setFirstLogin(false);
+            userRepository.save(user);
+        }
 
         return new LoginResponse("Login successful", userDTO);
     }
