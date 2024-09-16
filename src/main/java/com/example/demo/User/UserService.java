@@ -7,7 +7,7 @@ public class UserService {
 
     public UserDTO mapToUserDTO(Users user) {
         return UserDTO.builder()
-                .id(user.getId())
+                .id(user.getUserId())
                 .role(user.getRole())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())

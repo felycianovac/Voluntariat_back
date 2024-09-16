@@ -167,7 +167,7 @@ public class AuthenticationService {
         setJwtTokenInCookie(response, jwtToken);
 
         UserDTO userDTO = UserDTO.builder()
-                .id(user.getId())
+                .id(user.getUserId())
                 .role(user.getRole())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())

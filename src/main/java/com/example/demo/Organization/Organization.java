@@ -1,41 +1,57 @@
 package com.example.demo.Organization;
 
+import com.example.demo.Category.Categories;
+import com.example.demo.User.Users;
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
+import java.util.Date;
 import java.util.List;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
-@Table(name = "organizations")
-@Getter
-@Setter
+@Table(name = "Organizations")
 public class Organization {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(unique = true,nullable = false, name = "name")
+    @Column(name = "organization_id")
+    private int organizationId;
+    @Column(name = "name")
     private String name;
-    @Column(nullable = false, name = "description")
+    @Column(name = "description")
     private String description;
-    @Column(nullable = false, name = "address")
+    @Column(name = "address")
     private String address;
-    @Column(nullable = false, name = "region")
-    private int region;
-    @Column(nullable = false, name = "website")
+    @Column(name = "region_id")
+    private int regionId; //TODO: change to region object
+    @Column(name = "website")
     private String website;
-    @Column(nullable = false, name = "phoneNubmer")
+    @Column(name = "phone_number")
     private String phoneNumber;
-    @Column(nullable = false, name = "logo")
+    @Column(name = "logo")
     private String logo;
-    @Column(nullable = false, name = "approvalStatus")
-    private String approvalStatus;
+    @Column(name = "created_at")
+    private Date createdAt;
+    @Column(name = "updated_at")
+    private Date updatedAt;
+    @ManyToOne
+    @JoinColumn(name = "created_by", referencedColumnName = "user_id")
+    private Users createdBy;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "approval_status")
+    private ApprovalStatus approvalStatus;
+    @ManyToOne
+    @JoinColumn(name = "approved_by", referencedColumnName = "user_id")
+    private Users approvedBy;
+    @Column(name = "approval_date")
+    private Date approvalDate;
 
-    @ElementCollection
-    private List<Integer> categories;
+    @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrganizationCategories> organizationCategories;
+
 
 }
 

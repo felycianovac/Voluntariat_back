@@ -1,5 +1,6 @@
 package com.example.demo.User;
 
+import com.example.demo.Organization.Organization;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,9 +23,10 @@ import java.util.List;
 public class Users implements UserDetails{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private int id;
+    @Column(name = "user_id")
+    private int userId;
     @Enumerated(EnumType.STRING)
+    @Column(name = "role")
     private Roles role;
     @Column(name = "email")
     private String email;
@@ -52,6 +54,12 @@ public class Users implements UserDetails{
     private Date updatedAt;
     @Column(name = "is_first_login")
     private boolean isFirstLogin;
+
+    @OneToMany(mappedBy = "approvedBy")
+    private List<Organization> approvedOrganizations;
+
+    @OneToMany(mappedBy = "createdBy")
+    private List<Organization> createdOrganizations;
 
     //TODO: match regionId with Region entity
 

@@ -30,7 +30,7 @@ public class JwtService {
     public String generateToken( UserDetails userDetails) {
         if (userDetails instanceof Users){
             Users users = (Users) userDetails;
-            String userId = String.valueOf(users.getId());
+            String userId = String.valueOf(users.getUserId());
             return generateToken(userId, new HashMap<>(), userDetails);
         }
         return null;
@@ -63,7 +63,7 @@ public class JwtService {
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts.parser().setSigningKey(token).build().parseSignedClaims(token).getBody();
+        return Jwts.parser().setSigningKey(getSignInKey()).build().parseSignedClaims(token).getBody();
     }
 
     private Key getSignInKey() {
