@@ -1,7 +1,10 @@
 package com.example.demo.Security;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.catalina.connector.Connector;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -42,11 +45,31 @@ public class SecurityConfiguration {
     //TODO: restrict /admin access to only users with role ADMIN
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
-        http.csrf((csrf)->csrf.disable())
-                .authorizeHttpRequests(req->req.requestMatchers("/**").permitAll().anyRequest().authenticated())
-                .sessionManagement(session->session.sessionCreationPolicy(STATELESS)).authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
-        return http.build();
+//        http.csrf((csrf)->csrf.disable())
+//                .authorizeHttpRequests(req->req.requestMatchers("/**").permitAll().anyRequest().authenticated())
+//                .sessionManagement(session->session.sessionCreationPolicy(STATELESS)).authenticationProvider(authenticationProvider)
+//                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        return http.csrf((csrf)->csrf.disable())
+                .requiresChannel(channel ->
+                        channel.anyRequest().requiresSecure())
+                .authorizeRequests(authorize ->
+                        authorize.requestMatchers("/api/**").permitAll()//anyRequest().permitAll())
+                                .anyRequest().authenticated())
+                .build();
     }
+
+
+    @Bean
+    public ServletWebServerFactory servletContainer() {
+        TomcatServletWebServerFactory tomcat = new TomcatServletWebServerFactory();
+        tomcat.addAdditionalTomcatConnectors(createStandardConnector());
+        return tomcat;
+    }
+    private Connector createStandardConnector() {
+        Connector connector = new Connector(TomcatServletWebServerFactory.DEFAULT_PROTOCOL);
+        connector.setPort(8080);
+        connector.setRedirectPort(8443);
+        return connector;
+    }
+//        return http.build();
 }

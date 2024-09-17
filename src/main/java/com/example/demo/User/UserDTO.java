@@ -38,7 +38,7 @@ public class UserDTO {
                 .dateOfBirth(user.getDateOfBirth() != null ? user.getDateOfBirth() : null)
                 .bio(user.getBio())
                 .profilePicture(user.getProfilePicture())
-//                .organizationId(user.getOrganizationId()) //TODO: match organizationId with Organization entity ?!
+                .organizationId(user.getCreatedOrganizations().get(0).getOrganizationId())
                 .regionId(user.getRegionId())
                 .isFirstLogin(user.isFirstLogin())
                 .createdAt(user.getCreatedAt())

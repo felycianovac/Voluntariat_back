@@ -16,9 +16,9 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class OrganizationDTO {
 
-    private int id;  // Organization ID
+    private int id;
 
-    private CreatedByDTO createdBy;  // Nested object for user who created the organization
+    private CreatedByDTO createdBy;
 
     private String name;
 
@@ -30,21 +30,21 @@ public class OrganizationDTO {
 
     private int region;
 
-    private List<Integer> categories;  // List of category IDs
+    private List<Integer> categories;
 
     private String website;
 
     private String phoneNumber;
 
-    private Date createdAt;  // ISO Date String
+    private Date createdAt;
 
-    private Date updatedAt;  // ISO Date String
+    private Date updatedAt;
 
     private String approvalStatus;
 
-    private ApprovedByDTO approvedBy;  // Nested object for user who approved the organization
+    private ApprovedByDTO approvedBy;
 
-    private Date approvalDate;  // ISO Date String
+    private Date approvalDate;
 
     public static OrganizationDTO fromEntity(Organization organization) {
         return OrganizationDTO.builder()
