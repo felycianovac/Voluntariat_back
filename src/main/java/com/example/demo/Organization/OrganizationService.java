@@ -38,21 +38,25 @@ public class OrganizationService {
                 .build();
     }
 
-    public List<Organization> getAllOrganizations() {
-        return organizationRepository.findAll();
+    public List<OrganizationDTO> getAllOrganizations() {
+        return organizationRepository.findAll()
+                .stream()
+                .map(OrganizationDTO::fromEntity)
+                .collect(Collectors.toList());
     }
 
-    public Organization updateOrganizationLogo(int organizationId, String logoUrl) {
+    public OrganizationDTO updateOrganizationLogo(int organizationId, String logoUrl) {
         Optional<Organization> organizationOptional = organizationRepository.findById(organizationId);
-
         if (organizationOptional.isPresent()) {
             Organization organization = organizationOptional.get();
-            organization.setLogo(logoUrl); // Set the new logo URL
-            return organizationRepository.save(organization); // Save the updated organization
+            organization.setLogo(logoUrl);
+            organizationRepository.save(organization);
+            return OrganizationDTO.fromEntity(organization);
         } else {
-            throw new RuntimeException("Organization not found with ID: " + organizationId);
+            throw new RuntimeException("Organization not found");
         }
     }
+
 }
 //    public Optional<Organization> getOrganizationById(Long id) {
 //        return organizationRepository.findById(id);

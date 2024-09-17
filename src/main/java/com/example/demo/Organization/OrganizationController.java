@@ -34,20 +34,22 @@ public class OrganizationController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping()
-    public ResponseEntity<List<Organization>> getAllOrganizations() {
-        List<Organization> organizations = organizationService.getAllOrganizations();
-        return ResponseEntity.ok(organizations);
-    }
-
     @PutMapping("/{id}/logo")
-    public ResponseEntity<Organization> updateOrganizationLogo(
+    public ResponseEntity<OrganizationDTO> updateOrganizationLogo(
             @PathVariable int id,
             @RequestBody OrganizationLogoRequest logoRequest) {
 
-        Organization updatedOrganization = organizationService.updateOrganizationLogo(id, logoRequest.getLogo());
-        return ResponseEntity.ok(updatedOrganization);
+        OrganizationDTO organization = organizationService.updateOrganizationLogo(id, logoRequest.getLogo());
+        return ResponseEntity.ok(organization);
     }
+
+    @GetMapping()
+    public ResponseEntity<List<OrganizationDTO>> getAllOrganizations() {
+        List<OrganizationDTO> organizations = organizationService.getAllOrganizations();
+        return ResponseEntity.ok(organizations);
+    }
+
+
 
 //
 //    @GetMapping("/{id}")

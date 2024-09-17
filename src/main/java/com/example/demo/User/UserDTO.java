@@ -21,7 +21,7 @@ public class UserDTO {
     private Date dateOfBirth;
     private String bio;
     private String profilePicture;
-    private int organizationId;
+    private Integer organizationId;
     private int regionId;
     private boolean isFirstLogin;
     private Date createdAt;
@@ -38,7 +38,9 @@ public class UserDTO {
                 .dateOfBirth(user.getDateOfBirth() != null ? user.getDateOfBirth() : null)
                 .bio(user.getBio())
                 .profilePicture(user.getProfilePicture())
-                .organizationId(user.getCreatedOrganizations().get(0).getOrganizationId())
+                .organizationId(user.getCreatedOrganizations() != null && !user.getCreatedOrganizations().isEmpty()
+                        ? user.getCreatedOrganizations().get(0).getOrganizationId()
+                        : null)
                 .regionId(user.getRegionId())
                 .isFirstLogin(user.isFirstLogin())
                 .createdAt(user.getCreatedAt())

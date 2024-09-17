@@ -49,26 +49,23 @@ public class OrganizationDTO {
     public static OrganizationDTO fromEntity(Organization organization) {
         return OrganizationDTO.builder()
                 .id(organization.getOrganizationId())
-                .createdBy(CreatedByDTO.builder()
-                        .id(organization.getCreatedBy().getUserId())
-                        .firstName(organization.getCreatedBy().getFirstName())
-                        .lastName(organization.getCreatedBy().getLastName())
-                        .build())
+                .createdBy(organization.getCreatedBy() != null ?
+                        CreatedByDTO.fromEntity(organization.getCreatedBy()) : null)
                 .name(organization.getName())
                 .description(organization.getDescription())
                 .logo(organization.getLogo())
                 .address(organization.getAddress())
                 .region(organization.getRegionId())
-                .categories(organization.getOrganizationCategories().stream().map(organizationCategory -> organizationCategory.getCategory().getCategoryId()).collect(Collectors.toList()))
+                .categories(organization.getOrganizationCategories().stream()
+                        .map(organizationCategory -> organizationCategory.getCategory().getCategoryId())
+                        .collect(Collectors.toList()))
                 .website(organization.getWebsite())
                 .phoneNumber(organization.getPhoneNumber())
                 .createdAt(organization.getCreatedAt())
                 .updatedAt(organization.getUpdatedAt())
                 .approvalStatus(organization.getApprovalStatus().name())
-                .approvedBy(ApprovedByDTO.builder()
-                        .id(organization.getApprovedBy().getUserId())
-                        .username(organization.getApprovedBy().getUsername())
-                        .build())
+                .approvedBy(organization.getApprovedBy() != null ?
+                        ApprovedByDTO.fromEntity(organization.getApprovedBy()) : null)
                 .approvalDate(organization.getApprovalDate())
                 .build();
     }
