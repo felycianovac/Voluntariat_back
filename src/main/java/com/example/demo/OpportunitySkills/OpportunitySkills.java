@@ -19,12 +19,11 @@ public class OpportunitySkills {
     @Id //OpportunitySkillId ?
 
     @ManyToOne
-    @MapsId("opportunityId")
-    @JoinColumn(name = "opportunity_id")
+    @JoinColumn(name = "opportunity_id", nullable = false)
     private Opportunities opportunity;
 
     @ManyToOne
-    @MapsId("skillId")
-    @JoinColumn(name = "skill_id")
+    @JoinColumn(name = "skill_id", nullable = false)
     private Skills skill;
 }
+

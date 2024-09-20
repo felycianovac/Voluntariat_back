@@ -19,12 +19,12 @@ public class OpportunityCategories {
     @Id //OpportunityCategoryId
 
     @ManyToOne
-    @MapsId("opportunityId")
+//    @MapsId("opportunityId")
     @JoinColumn(name = "opportunity_id", nullable = false)
     private Opportunities opportunity;
 
     @ManyToOne
-    @MapsId("categoryId")
+//    @MapsId("categoryId")
     @JoinColumn(name = "category_id", nullable = false)
     private Categories category;
 }

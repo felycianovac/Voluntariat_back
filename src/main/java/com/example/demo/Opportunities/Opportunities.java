@@ -49,7 +49,7 @@ public class Opportunities {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "approval_status")
-    private ApprovalStatus approvalStatus = ApprovalStatus.PENDING;
+    private ApprovalStatus approvalStatus;
     @ManyToOne
     @JoinColumn(name = "approved_by")
     private Users approvedBy;

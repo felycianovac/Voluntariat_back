@@ -1,13 +1,13 @@
 package com.example.demo.Organization;
 
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
+
 public class OrganizationApprovalRequest {
     private String status;
 }

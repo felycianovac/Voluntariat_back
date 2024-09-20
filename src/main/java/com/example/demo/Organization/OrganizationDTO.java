@@ -1,4 +1,6 @@
 package com.example.demo.Organization;
+import com.example.demo.Region.Regions;
+import com.example.demo.Region.RegionsDTO;
 import com.example.demo.User.ApprovedByDTO;
 import com.example.demo.User.CreatedByDTO;
 import lombok.AllArgsConstructor;
@@ -28,7 +30,7 @@ public class OrganizationDTO {
 
     private String address;
 
-    private int region;
+    private RegionsDTO region;
 
     private List<Integer> categories;
 
@@ -55,7 +57,7 @@ public class OrganizationDTO {
                 .description(organization.getDescription())
                 .logo(organization.getLogo())
                 .address(organization.getAddress())
-                .region(organization.getRegionId())
+                .region(RegionsDTO.fromEntity(organization.getRegion()))
                 .categories(organization.getOrganizationCategories().stream()
                         .map(organizationCategory -> organizationCategory.getCategory().getCategoryId())
                         .collect(Collectors.toList()))

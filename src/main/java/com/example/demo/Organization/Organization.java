@@ -1,6 +1,6 @@
 package com.example.demo.Organization;
 
-import com.example.demo.Category.Categories;
+import com.example.demo.Region.Regions;
 import com.example.demo.User.Users;
 import jakarta.persistence.*;
 import lombok.*;
@@ -25,8 +25,9 @@ public class Organization {
     private String description;
     @Column(name = "address")
     private String address;
-    @Column(name = "region_id")
-    private int regionId; //TODO: change to region object
+    @ManyToOne
+    @JoinColumn(name = "region_id", referencedColumnName = "region_id", nullable = false)
+    private Regions region;
     @Column(name = "website")
     private String website;
     @Column(name = "phone_number")
