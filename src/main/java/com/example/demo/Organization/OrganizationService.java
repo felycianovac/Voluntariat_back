@@ -8,6 +8,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.beans.Transient;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -18,7 +19,10 @@ public class OrganizationService {
     @Autowired
     private OrganizationRepository organizationRepository;
 
+    @Transactional
     public OrganizationResponse createOrganization(OrganizationRequest organizationRequest, Users user) {
+
+
         Organization organization = Organization.builder()
                 .name(organizationRequest.getName())
                 .description(organizationRequest.getDescription())
@@ -27,8 +31,24 @@ public class OrganizationService {
                 .website(organizationRequest.getWebsite())
                 .phoneNumber(organizationRequest.getPhoneNumber())
                 .createdBy(user)
+                .createdAt(new java.util.Date())
+//                .approvalStatus(ApprovalStatus.PENDING)
                 .organizationCategories(organizationRequest.getCategoryIds().stream().map(categoryId -> OrganizationCategories.builder().category(Categories.builder().categoryId(categoryId).build()).build()).collect(Collectors.toList()))
                 .build();
+
+
+        List<OrganizationCategories> organizationCategories = organizationRequest.getCategoryIds()
+                .stream()
+                .map(categoryId -> {
+                    Categories category = Categories.builder().categoryId(categoryId).build();
+                    return OrganizationCategories.builder()
+                            .category(category)
+                            .organization(organization)
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        organization.setOrganizationCategories(organizationCategories);
 
         organizationRepository.save(organization);
 
@@ -57,6 +77,31 @@ public class OrganizationService {
         }
     }
 
+    public OrganizationDTO updateApprovalStatus(int organizationId, String approvalStatus) {
+        Optional<Organization> organizationOptional = organizationRepository.findById(organizationId);
+        if (organizationOptional.isPresent()) {
+            Organization organization = organizationOptional.get();
+            organization.setApprovalStatus(ApprovalStatus.valueOf(approvalStatus));
+            organizationRepository.save(organization);
+            return OrganizationDTO.fromEntity(organization);
+        } else {
+            throw new RuntimeException("Organization not found");
+        }
+    }
+
+
+    public OrganizationDTO getOrganizationById(int id) {
+        Optional<Organization> optionalOrganization = organizationRepository.findById(id);
+
+        if (optionalOrganization.isEmpty()) {
+            throw new RuntimeException("Organization not found");
+        }
+
+        Organization organization = optionalOrganization.get();
+
+        // Convert the organization to a DTO and return
+        return OrganizationDTO.fromEntity(organization);
+    }
 }
 //    public Optional<Organization> getOrganizationById(Long id) {
 //        return organizationRepository.findById(id);

@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import java.util.Collection;
 import java.util.Date;
@@ -55,7 +56,7 @@ public class Users implements UserDetails{
     @Column(name = "is_first_login")
     private boolean isFirstLogin;
 
-    @OneToMany(mappedBy = "approvedBy")
+    @OneToMany(mappedBy = "approvedBy", fetch = FetchType.EAGER)
     private List<Organization> approvedOrganizations;
 
     @OneToMany(mappedBy = "createdBy")

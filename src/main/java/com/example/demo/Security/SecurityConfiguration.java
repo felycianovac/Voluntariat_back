@@ -44,17 +44,20 @@ public class SecurityConfiguration {
     }
     //TODO: restrict /admin access to only users with role ADMIN
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 //        http.csrf((csrf)->csrf.disable())
 //                .authorizeHttpRequests(req->req.requestMatchers("/**").permitAll().anyRequest().authenticated())
 //                .sessionManagement(session->session.sessionCreationPolicy(STATELESS)).authenticationProvider(authenticationProvider)
 //                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-        return http.csrf((csrf)->csrf.disable())
-                .requiresChannel(channel ->
-                        channel.anyRequest().requiresSecure())
-                .authorizeRequests(authorize ->
-                        authorize.requestMatchers("/api/**").permitAll()//anyRequest().permitAll())
-                                .anyRequest().authenticated())
+        return http.csrf(csrf -> csrf.disable())
+                .requiresChannel(channel -> channel.anyRequest().requiresSecure())  // Forces HTTPS on all requests
+                .authorizeRequests(authorize -> authorize
+                        .requestMatchers("/api/**").permitAll()  // Allows public access to /api/**
+                        .requestMatchers("/admin/**").hasRole("ADMIN")  // Restricts /admin/** to ADMIN users
+                        .anyRequest().authenticated())  // All other requests require authentication
+                .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))  // Stateless session (no HTTP session)
+                .authenticationProvider(authenticationProvider)  // Use the custom authentication provider
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)  // Adds the JWT filter
                 .build();
     }
 
