@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrganizationDTO {
+public class OrganizationDTO2 {
 
     private int id;
 
@@ -46,12 +46,10 @@ public class OrganizationDTO {
 
     private String approvalStatus;
 
-    private ApprovedByDTO approvedBy;
-
     private Date approvalDate;
 
-    public static OrganizationDTO fromEntity(Organization organization) {
-        return OrganizationDTO.builder()
+    public static OrganizationDTO2 fromEntity(Organization organization) {
+        return OrganizationDTO2.builder()
                 .id(organization.getOrganizationId())
                 .createdBy(organization.getCreatedBy() != null ?
                         CreatedByDTO.fromEntity(organization.getCreatedBy()) : null)
@@ -68,8 +66,6 @@ public class OrganizationDTO {
                 .createdAt(organization.getCreatedAt())
                 .updatedAt(organization.getUpdatedAt())
                 .approvalStatus(organization.getApprovalStatus().name())
-                .approvedBy(organization.getApprovedBy() != null ?
-                        ApprovedByDTO.fromEntity(organization.getApprovedBy()) : null)
                 .approvalDate(organization.getApprovalDate())
                 .build();
 

@@ -7,6 +7,7 @@ import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactor
 import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -52,9 +53,17 @@ public class SecurityConfiguration {
         return http.csrf(csrf -> csrf.disable())
                 .requiresChannel(channel -> channel.anyRequest().requiresSecure())  // Forces HTTPS on all requests
                 .authorizeRequests(authorize -> authorize
-                        .requestMatchers("/api/**").permitAll()  // Allows public access to /api/**
-                        .requestMatchers("/admin/**").hasRole("ADMIN")  // Restricts /admin/** to ADMIN users
-                        .anyRequest().authenticated())  // All other requests require authentication
+                        .requestMatchers("/api/auth/login").permitAll()
+                        .requestMatchers("/api/auth/register").permitAll()
+                        .requestMatchers("/api/auth/confirm-email").permitAll()
+                        .requestMatchers("api/organizations/*/logo").permitAll()
+                        .requestMatchers("api/organizations/create").permitAll()
+                        .requestMatchers("api/organizations").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/organizations/*/status").hasAnyAuthority("ADMIN")
+                        .requestMatchers("api/organizations/*").permitAll()
+
+                        .requestMatchers("/admin/**").hasAnyAuthority("ADMIN")
+                        .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))  // Stateless session (no HTTP session)
                 .authenticationProvider(authenticationProvider)  // Use the custom authentication provider
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)  // Adds the JWT filter

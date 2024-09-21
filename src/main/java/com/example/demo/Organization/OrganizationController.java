@@ -6,12 +6,14 @@ import com.example.demo.User.Users;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/organizations")
@@ -58,11 +60,17 @@ public class OrganizationController {
     }
 
     @GetMapping()
-    public ResponseEntity<List<OrganizationDTO>> getAllOrganizations() {
-        List<OrganizationDTO> organizations = organizationService.getAllOrganizations();
+    public ResponseEntity<List<?>> getAllOrganizations(Authentication authentication) {
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ADMIN"));
+        System.out.println("isAdmin: " + isAdmin);
+        List<?> organizations = organizationService.getAllOrganizations(isAdmin);
+
+
         return ResponseEntity.ok(organizations);
     }
 
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     @PutMapping("/{id}/status")
 
     public ResponseEntity<OrganizationDTO> updateApprovalStatus(

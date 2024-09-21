@@ -48,7 +48,7 @@ public class Users implements UserDetails{
     @Column(name = "is_profile_completed")
     private boolean isProfileCompleted;
     @Column(name = "region_id")
-    private int regionId;
+    private Integer regionId;
     @Column(name = "created_at")
     private Date createdAt;
     @Column(name = "updated_at")
@@ -67,7 +67,7 @@ public class Users implements UserDetails{
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(role.name()));
+        return List.of(new SimpleGrantedAuthority(role.name().toUpperCase()));
     }
 
 

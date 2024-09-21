@@ -14,10 +14,20 @@ public class ApprovedByDTO {
     private int id;
     private String username;
 
+//    public static ApprovedByDTO fromEntity(Users user) {
+//        return ApprovedByDTO.builder()
+//                .id(user.getUserId())
+//                .username(user.getUsername())
+//                .build();
+//    }
+
     public static ApprovedByDTO fromEntity(Users user) {
+        if (user == null) {
+            return null;
+        }
         return ApprovedByDTO.builder()
                 .id(user.getUserId())
-                .username(user.getUsername())
+                .username(user.getEmail())
                 .build();
     }
 

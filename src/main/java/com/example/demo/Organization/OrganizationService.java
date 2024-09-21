@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -61,10 +62,22 @@ public class OrganizationService {
                 .build();
     }
 
-    public List<OrganizationDTO> getAllOrganizations() {
-        return organizationRepository.findAll()
-                .stream()
-                .map(OrganizationDTO::fromEntity)
+    public List<Object> getAllOrganizations(boolean isAdmin) {
+//        return organizationRepository.findAll()
+//                .stream()
+//                .map(OrganizationDTO::fromEntity)
+//                .collect(Collectors.toList());
+        return organizationRepository.findAll().stream()
+                .filter(org -> "APPROVED".equalsIgnoreCase(org.getApprovalStatus().name()))
+                .map(org -> {
+                    if (isAdmin) {
+                        System.out.println("isAdmin: " + isAdmin);
+                        return OrganizationDTO.fromEntity(org);
+                    } else {
+                        System.out.println("isAdmin: " + isAdmin);
+                        return OrganizationDTO2.fromEntity(org);
+                    }
+                })
                 .collect(Collectors.toList());
     }
 
