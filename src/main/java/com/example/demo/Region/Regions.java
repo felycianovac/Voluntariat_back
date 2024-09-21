@@ -2,6 +2,7 @@ package com.example.demo.Region;
 
 
 import com.example.demo.Organization.Organization;
+import com.example.demo.User.Users;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,4 +27,7 @@ public class Regions {
 
     @OneToMany(mappedBy = "region")
     private List<Organization> organizations;
+
+    @OneToMany(mappedBy = "region")
+    private List<Users> users;
 }

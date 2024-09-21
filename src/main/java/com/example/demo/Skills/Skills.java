@@ -1,17 +1,20 @@
 package com.example.demo.Skills;
 
+import com.example.demo.VolunteerSkills.VolunteerSkills;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "Skills")
+@Table(name = "skills")
 public class Skills {
 
     @Id
@@ -21,4 +24,7 @@ public class Skills {
 
     @Column(name = "name")
     private String name;
+
+    @OneToMany(mappedBy = "skill", cascade = CascadeType.ALL)
+    private List<VolunteerSkills> volunteerSkills;
 }

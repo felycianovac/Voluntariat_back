@@ -54,13 +54,18 @@ public class SecurityConfiguration {
                 .requiresChannel(channel -> channel.anyRequest().requiresSecure())  // Forces HTTPS on all requests
                 .authorizeRequests(authorize -> authorize
                         .requestMatchers("/api/auth/login").permitAll()
+                        .requestMatchers("/api/auth").authenticated()
                         .requestMatchers("/api/auth/register").permitAll()
                         .requestMatchers("/api/auth/confirm-email").permitAll()
-                        .requestMatchers("api/organizations/*/logo").permitAll()
-                        .requestMatchers("api/organizations/create").permitAll()
-                        .requestMatchers("api/organizations").permitAll()
+                        .requestMatchers("/api/auth/login/admin").permitAll()
+                        .requestMatchers("/api/auth/logout").permitAll()
+                        .requestMatchers("/api/auth/profile").authenticated()
+                        .requestMatchers("/api/auth/profile/profilePicture").authenticated()
+                        .requestMatchers("api/organizations/*/logo").authenticated()
+                        .requestMatchers("api/organizations/create").authenticated()
+                        .requestMatchers("api/organizations").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/organizations/*/status").hasAnyAuthority("ADMIN")
-                        .requestMatchers("api/organizations/*").permitAll()
+                        .requestMatchers("api/organizations/*").authenticated()
 
                         .requestMatchers("/admin/**").hasAnyAuthority("ADMIN")
                         .anyRequest().authenticated())

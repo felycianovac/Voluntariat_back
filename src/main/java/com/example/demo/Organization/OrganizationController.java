@@ -36,15 +36,13 @@ public class OrganizationController {
 
         Object principal = authentication.getPrincipal();
         if (principal instanceof String) {
-            // If the principal is a String (typically the email or username)
             email = (String) principal;
         } else if (principal instanceof UserDetails) {
-            // If the principal is a UserDetails object (e.g., Users entity)
             email = ((UserDetails) principal).getUsername();
         } else {
             throw new IllegalStateException("Unexpected principal type: " + principal.getClass());
         }
-        Users authenticatedUser = userService.findByEmail(email);  // Assuming userService to fetch user entity
+        Users authenticatedUser = userService.findByEmail(email);
 
         OrganizationResponse response = organizationService.createOrganization(organizationRequest, authenticatedUser);
         return ResponseEntity.ok(response);

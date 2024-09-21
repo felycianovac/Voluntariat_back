@@ -1,6 +1,8 @@
 package com.example.demo.User;
 
 import com.example.demo.Organization.Organization;
+import com.example.demo.Region.Regions;
+import com.example.demo.VolunteerSkills.VolunteerSkills;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -47,8 +49,9 @@ public class Users implements UserDetails{
     private String profilePicture;
     @Column(name = "is_profile_completed")
     private boolean isProfileCompleted;
-    @Column(name = "region_id")
-    private Integer regionId;
+    @ManyToOne
+    @JoinColumn(name = "region_id", referencedColumnName = "region_id")
+    private Regions region;
     @Column(name = "created_at")
     private Date createdAt;
     @Column(name = "updated_at")
@@ -62,7 +65,9 @@ public class Users implements UserDetails{
     @OneToMany(mappedBy = "createdBy")
     private List<Organization> createdOrganizations;
 
-    //TODO: match regionId with Region entity
+    @OneToMany(mappedBy = "volunteer", cascade = CascadeType.ALL)
+    private List<VolunteerSkills> volunteerSkills;
+
 
 
     @Override

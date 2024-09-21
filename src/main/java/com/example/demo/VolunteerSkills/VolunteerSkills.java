@@ -13,10 +13,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "VolunteerSkills")
+@Table(name = "volunteer_skills")
 public class VolunteerSkills {
 
-    @Id // VolunteerSkillId ?
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private int id;
 
     @ManyToOne
     @JoinColumn(name = "volunteer_id")

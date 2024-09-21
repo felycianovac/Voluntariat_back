@@ -1,11 +1,15 @@
 package com.example.demo.Auth;
 
+import com.example.demo.Auth.Profile.ProfilePictureRequest;
+import com.example.demo.Auth.Profile.ProfileRequest;
 import com.example.demo.Email.EmailService;
+import com.example.demo.Region.Regions;
+import com.example.demo.Region.RegionsRepository;
 import com.example.demo.Security.JwtService;
-import com.example.demo.User.Roles;
-import com.example.demo.User.UserDTO;
-import com.example.demo.User.Users;
-import com.example.demo.User.UsersRepository;
+import com.example.demo.Skills.Skills;
+import com.example.demo.Skills.SkillsRepository;
+import com.example.demo.User.*;
+import com.example.demo.VolunteerSkills.VolunteerSkills;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -18,8 +22,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -29,22 +35,33 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final JwtService jwtService;
+    private final RegionsRepository regionRepository;
+    private final SkillsRepository skillsRepository;
 
-    public RegisterResponse register(RegisterRequest request, HttpServletResponse response) {
+    public RegisterResponse register(RegisterRequest request, HttpServletResponse response, HttpServletRequest httpRequest) {
         Optional<Users> userOptional = userRepository.findByEmail(request.getEmail());
-
+        Optional<Users> userOptionalByPhoneNumber = userRepository.findByPhoneNumber(request.getPhoneNumber());
+        if (userOptionalByPhoneNumber.isPresent()) {
+            if(userOptionalByPhoneNumber.get().isEnabled()) {
+                return new RegisterResponse("An account with this phone number already exists.", "PHONE_NUMBER_ALREADY_EXISTS");
+            }
+        }
         if (userOptional.isPresent()) {
             if (userOptional.get().isEnabled()) {
-                return new RegisterResponse("Email already registered.", "PENDING_EMAIL_CONFIRMATION");
+                return new RegisterResponse("An account with this email already exists.", "EMAIL_ALREADY_EXISTS");
             }
-
-            String token = generateVerificationToken();
-            setTokenInCookie(response, userOptional.get().getEmail(), token);
-            emailService.sendVerificationToken(userOptional.get().getEmail(), token);
-
-            return new RegisterResponse("Success. Verification token sent via email.", "PENDING_EMAIL_CONFIRMATION");
         }
-
+        if((userOptionalByPhoneNumber.isPresent()  && !userOptionalByPhoneNumber.get().isEnabled())|| (userOptional.isPresent() && !userOptional.get().isEnabled())) {
+            String existingToken = getTokenFromCookie(httpRequest);
+            if (existingToken == null) {
+                String token = generateVerificationToken();
+                setTokenInCookie(response, userOptional.get().getEmail(), token);
+                emailService.sendVerificationToken(userOptional.get().getEmail(), token);
+                return new RegisterResponse("Verification token expired. A new token has been sent via email.", "NEW_TOKEN_SENT");
+            } else {
+                return new RegisterResponse("A verification token is already valid. Please check your email.", "PENDING_EMAIL_CONFIRMATION");
+            }
+        }
         Users user = Users.builder()
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
@@ -64,7 +81,7 @@ public class AuthenticationService {
         setTokenInCookie(response, user.getEmail(), token);
         emailService.sendVerificationToken(user.getEmail(), token);
 
-        return new RegisterResponse("Success. Verification token sent via email.", "PENDING_EMAIL_CONFIRMATION");
+        return new RegisterResponse("Success. Verification token sent via email.", "EMAIL_SENT");
     }
 
     public RegisterResponse confirmEmail(String token, HttpServletRequest request) {
@@ -108,6 +125,19 @@ public class AuthenticationService {
 
         return (new RegisterResponse("Token not found in cookies.", "ERROR"));
     }
+
+    private String getTokenFromCookie(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("verification_token".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return null;
+    }
+
 
     private String generateVerificationToken() {
 
@@ -155,6 +185,11 @@ public class AuthenticationService {
 
         Users user = userOptional.get();
 
+        if (!user.getAuthorities().stream()
+                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("USER"))) {
+            return new LoginResponse("Access denied: insufficient permissions", null);
+        }
+
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             return new LoginResponse("Invalid credentials", null);
         }
@@ -186,5 +221,115 @@ public class AuthenticationService {
 
         response.addHeader(HttpHeaders.SET_COOKIE, tokenCookie.toString());
     }
+
+
+    public AdminResponse loginAdmin(LoginRequest request, HttpServletResponse response) {
+        Optional<Users> userOptional = userRepository.findByEmail(request.getEmail());
+        if (userOptional.isEmpty()) {
+            return new AdminResponse("Admin not found", null);
+        }
+
+        Users user = userOptional.get();
+        if (!user.getAuthorities().stream()
+                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ADMIN"))) {
+            return new AdminResponse("Access denied: insufficient permissions", null);
+        }
+        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+            return new AdminResponse("Invalid credentials", null);
+        }
+
+        String jwtToken = jwtService.generateToken(user);
+        setJwtTokenInCookie(response, jwtToken);
+
+        AdminDTO adminDTO = AdminDTO.fromEntity(user);
+
+        return new AdminResponse("Login successful", adminDTO);
+    }
+
+    public LogoutResponse logout(HttpServletResponse response) {
+        ResponseCookie tokenCookie = ResponseCookie.from("auth_token", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(0)
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, tokenCookie.toString());
+
+        return new LogoutResponse("Logout successful");
+    }
+
+    public UsersDTO2 updateProfile(ProfileRequest request, HttpServletRequest httpRequest) {
+        String email = request.getEmail();
+
+        // Find the user in the database by email
+        Users user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (request.getFirstName() != null) {
+            user.setFirstName(request.getFirstName());
+        }
+        if (request.getLastName() != null) {
+            user.setLastName(request.getLastName());
+        }
+        if (request.getPhoneNumber() != null) {
+            user.setPhoneNumber(request.getPhoneNumber());
+        }
+        if (request.getBio() != null) {
+            user.setBio(request.getBio());
+        }
+        if (request.getRegion() != null) {
+            Regions region = regionRepository.findById(request.getRegion().getId())
+                    .orElseThrow(() -> new RuntimeException("Region not found"));
+            user.setRegion(region);
+        }
+        if (request.getSkills() != null) {
+            List<VolunteerSkills> newSkills = request.getSkills().stream()
+                    .map(skillsDTO -> {
+                        Skills skill = skillsRepository.findById(skillsDTO.getId())
+                                .orElseThrow(() -> new RuntimeException("Skill not found"));
+                        return VolunteerSkills.builder()
+                                .volunteer(user)
+                                .skill(skill)
+                                .build();
+                    })
+                    .collect(Collectors.toList());
+
+            // Clear the old skills and set new ones
+            user.getVolunteerSkills().clear();
+            user.getVolunteerSkills().addAll(newSkills);
+        }
+
+        // Save the updated user
+        Users updatedUser = userRepository.save(user);
+
+        // Return the updated user DTO
+        return UsersDTO2.fromEntity(updatedUser);
+    }
+
+    public UsersDTO2 updateProfilePicture(ProfilePictureRequest request, HttpServletRequest httpRequest) {
+        String email = httpRequest.getUserPrincipal().getName();
+
+        Users user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (request.getProfilePicture() != null) {
+            user.setProfilePicture(request.getProfilePicture());
+        }
+
+        Users updatedUser = userRepository.save(user);
+
+        return UsersDTO2.fromEntity(updatedUser);
+    }
+
+    public UsersDTO2 getProfile(HttpServletRequest httpRequest) {
+        String email = httpRequest.getUserPrincipal().getName();
+
+        Users user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return UsersDTO2.fromEntity(user);
+    }
 }
+
 
