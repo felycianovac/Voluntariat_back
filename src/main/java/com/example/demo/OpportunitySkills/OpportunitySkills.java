@@ -16,7 +16,10 @@ import lombok.NoArgsConstructor;
 @Table(name = "OpportunitySkills")
 public class OpportunitySkills {
 
-    @Id //OpportunitySkillId ?
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private int id;
 
     @ManyToOne
     @JoinColumn(name = "opportunity_id", nullable = false)

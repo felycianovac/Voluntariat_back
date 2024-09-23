@@ -43,15 +43,10 @@ public class SecurityConfiguration {
                 .build();
         return new InMemoryUserDetailsManager(user);
     }
-    //TODO: restrict /admin access to only users with role ADMIN
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-//        http.csrf((csrf)->csrf.disable())
-//                .authorizeHttpRequests(req->req.requestMatchers("/**").permitAll().anyRequest().authenticated())
-//                .sessionManagement(session->session.sessionCreationPolicy(STATELESS)).authenticationProvider(authenticationProvider)
-//                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.csrf(csrf -> csrf.disable())
-                .requiresChannel(channel -> channel.anyRequest().requiresSecure())  // Forces HTTPS on all requests
+                .requiresChannel(channel -> channel.anyRequest().requiresSecure())
                 .authorizeRequests(authorize -> authorize
                         .requestMatchers("/api/auth/login").permitAll()
                         .requestMatchers("/api/auth").authenticated()
@@ -64,18 +59,16 @@ public class SecurityConfiguration {
                         .requestMatchers("api/organizations/*/logo").authenticated()
                         .requestMatchers("api/organizations/create").authenticated()
                         .requestMatchers("api/organizations").authenticated()
+                        .requestMatchers("api/opportunities/create").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/organizations/*/status").hasAnyAuthority("ADMIN")
                         .requestMatchers("api/organizations/*").authenticated()
-
                         .requestMatchers("/admin/**").hasAnyAuthority("ADMIN")
                         .anyRequest().authenticated())
-                .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))  // Stateless session (no HTTP session)
-                .authenticationProvider(authenticationProvider)  // Use the custom authentication provider
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)  // Adds the JWT filter
+                .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
+                .authenticationProvider(authenticationProvider)
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
-
-
     @Bean
     public ServletWebServerFactory servletContainer() {
         TomcatServletWebServerFactory tomcat = new TomcatServletWebServerFactory();
@@ -88,5 +81,4 @@ public class SecurityConfiguration {
         connector.setRedirectPort(8443);
         return connector;
     }
-//        return http.build();
 }

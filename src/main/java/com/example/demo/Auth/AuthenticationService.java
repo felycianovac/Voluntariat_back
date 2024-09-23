@@ -248,7 +248,7 @@ public class AuthenticationService {
 
     public LogoutResponse logout(HttpServletResponse response) {
         ResponseCookie tokenCookie = ResponseCookie.from("auth_token", "")
-                .httpOnly(true)
+                .httpOnly(false)
                 .secure(true)
                 .path("/")
                 .maxAge(0)

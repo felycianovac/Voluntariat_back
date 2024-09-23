@@ -1,5 +1,6 @@
 package com.example.demo.Skills;
 
+import com.example.demo.OpportunitySkills.OpportunitySkills;
 import com.example.demo.VolunteerSkills.VolunteerSkills;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -27,4 +28,7 @@ public class Skills {
 
     @OneToMany(mappedBy = "skill", cascade = CascadeType.ALL)
     private List<VolunteerSkills> volunteerSkills;
+
+    @OneToMany(mappedBy = "skill", cascade = CascadeType.ALL)
+    private List<OpportunitySkills> opportunitySkills;
 }

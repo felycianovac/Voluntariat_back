@@ -12,19 +12,19 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@Table(name = "OpportunityCategories")
+@Entity(name = "opportunity_categories")
 public class OpportunityCategories {
 
-    @Id //OpportunityCategoryId
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private int id;
 
     @ManyToOne
-//    @MapsId("opportunityId")
     @JoinColumn(name = "opportunity_id", nullable = false)
     private Opportunities opportunity;
 
     @ManyToOne
-//    @MapsId("categoryId")
     @JoinColumn(name = "category_id", nullable = false)
     private Categories category;
 }

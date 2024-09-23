@@ -1,7 +1,11 @@
 package com.example.demo.Opportunities;
 
+import com.example.demo.OpportunityCategories.OpportunityCategories;
+import com.example.demo.OpportunitySkills.OpportunitySkills;
 import com.example.demo.Organization.ApprovalStatus;
 import com.example.demo.Organization.Organization;
+import com.example.demo.Region.Regions;
+import com.example.demo.Sessions.Sessions;
 import com.example.demo.User.Users;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -10,6 +14,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
+import java.util.List;
 
 @Data
 @Builder
@@ -38,8 +43,10 @@ public class Opportunities {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "region_id")
-    private int regionId;
+    @ManyToOne
+    @JoinColumn(name = "region_id", nullable = false)
+    private Regions region;
+
 
     @Column(name = "address")
     private String address;
@@ -65,5 +72,14 @@ public class Opportunities {
 
     @Column(name = "updated_at")
     private Date updatedAt;
+
+    @OneToMany(mappedBy = "opportunity")
+    private List<Sessions> sessions;
+
+    @OneToMany(mappedBy = "opportunity", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OpportunityCategories> opportunityCategories;
+
+    @OneToMany(mappedBy = "opportunity", cascade = CascadeType.ALL)
+    private List<OpportunitySkills> opportunitySkills;
 
 }
