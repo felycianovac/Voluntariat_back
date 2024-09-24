@@ -120,5 +120,14 @@ public class OpportunitiesService {
                 .build();
     }
 
+
+    public OpportunityDTO attachImage(int id, OpportunitiesImageRequest request) {
+        Opportunities opportunity = opportunitiesRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Opportunity not found"));
+        opportunity.setImage(request.getImage());
+        Opportunities updatedOpportunity = opportunitiesRepository.save(opportunity);
+        return OpportunityDTO.fromEntity(updatedOpportunity);
+    }
+
     //TODO: modify date format
 }

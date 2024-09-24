@@ -22,4 +22,12 @@ public class OpportunitiesController {
         OpportunityResponse response = opportunitiesService.createOpportunity(request, httpRequest);
         return ResponseEntity.ok(response);
     }
-}
+
+    @PutMapping("/{id}/image")
+    public ResponseEntity<OpportunityDTO> uploadOpportunityImage(
+            @PathVariable int id,
+            @RequestBody OpportunitiesImageRequest request) {
+        OpportunityDTO updatedOpportunityDTO = opportunitiesService.attachImage(id, request);
+        return ResponseEntity.ok(updatedOpportunityDTO);
+
+    }}

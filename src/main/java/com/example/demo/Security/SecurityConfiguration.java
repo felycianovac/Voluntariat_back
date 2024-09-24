@@ -60,6 +60,7 @@ public class SecurityConfiguration {
                         .requestMatchers("api/organizations/create").authenticated()
                         .requestMatchers("api/organizations").authenticated()
                         .requestMatchers("api/opportunities/create").authenticated()
+                        .requestMatchers("api/opportunities/*/image").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/organizations/*/status").hasAnyAuthority("ADMIN")
                         .requestMatchers("api/organizations/*").authenticated()
                         .requestMatchers("/admin/**").hasAnyAuthority("ADMIN")
