@@ -12,6 +12,8 @@ public class CorsConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.addAllowedOrigin("*");
+        configuration.addAllowedOriginPattern("*"); // Should be avoided if credentials are allowed
+
         configuration.addAllowedMethod("*");
         configuration.addAllowedOriginPattern("*");
         configuration.addAllowedHeader("*");

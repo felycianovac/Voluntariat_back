@@ -39,7 +39,7 @@ public class UsersDTO2 {
                 .skills(user.getVolunteerSkills().stream()
                         .map(volunteerSkill -> SkillsDTO.fromEntity(volunteerSkill.getSkill()))
                         .collect(Collectors.toList()))
-                .region(RegionsDTO.fromEntity(user.getRegion()))
+                .region( user.getRegion() != null ? RegionsDTO.fromEntity(user.getRegion()) : null)
                 .bio(user.getBio())
                 .profilePicture(user.getProfilePicture())
                 .build();

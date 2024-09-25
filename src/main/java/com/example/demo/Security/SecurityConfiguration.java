@@ -1,5 +1,7 @@
 package com.example.demo.Security;
 
+import com.example.demo.Auth.CustomOAuth2UserService;
+import com.example.demo.Auth.CustomOAuthSuccessHandler;
 import lombok.RequiredArgsConstructor;
 import org.apache.catalina.connector.Connector;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,14 +32,15 @@ public class SecurityConfiguration {
     @Autowired
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final AuthenticationProvider authenticationProvider;
-
     @Autowired
-    private final ClientRegistrationRepository clientRegistrationRepository;
+    private final CustomOAuthSuccessHandler customOAuthSuccessHandler;
+
 
     @Bean
     public static PasswordEncoder myPasswordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
 
     @Bean
     public InMemoryUserDetailsManager userDetailsManager(){
@@ -48,10 +51,12 @@ public class SecurityConfiguration {
         return new InMemoryUserDetailsManager(user);
     }
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomOAuth2UserService customOAuth2UserService) throws Exception {
         return http.csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.disable())
                 .requiresChannel(channel -> channel.anyRequest().requiresSecure())
                 .authorizeRequests(authorize -> authorize
+                        .requestMatchers("/api/login/oauth2").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
                         .requestMatchers("/api/auth").authenticated()
                         .requestMatchers("/api/auth/register").permitAll()
@@ -70,15 +75,16 @@ public class SecurityConfiguration {
                         .requestMatchers("/opportunities/*").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/organizations/*/status").hasAnyAuthority("ADMIN")
                         .requestMatchers("api/organizations/*").authenticated()
-                        .requestMatchers("/api/login/oauth2").permitAll()
                         .requestMatchers("/admin/**").hasAnyAuthority("ADMIN")
                         .requestMatchers("/api/regions").permitAll()
                         .requestMatchers("/api/skills").permitAll()
+                        .requestMatchers("/api/categories").permitAll()
                         .anyRequest().authenticated())
                 .oauth2Login(oauth2 -> oauth2
-                        .loginPage("/api/login/oauth2")
-                        .defaultSuccessUrl("/api/auth/profile", true)
-                        .failureUrl("/login?error=true"))
+                        .successHandler(customOAuthSuccessHandler))
+
+//                        .clientRegistrationRepository(clientRegistrationRepository))
+
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

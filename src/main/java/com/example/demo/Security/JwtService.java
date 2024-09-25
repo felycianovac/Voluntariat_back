@@ -7,6 +7,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
@@ -49,6 +50,21 @@ public class JwtService {
                 .signWith(SignatureAlgorithm.HS256, getSignInKey()).compact();
 
     }
+
+    public String generateToken(OAuth2User oAuth2User) {
+        String email = oAuth2User.getAttribute("email");
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("email", email);
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(email)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24))  // Token valid for 24 hours
+                .signWith(SignatureAlgorithm.HS256, getSignInKey())
+                .compact();
+    }
+
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
