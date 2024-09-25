@@ -7,8 +7,7 @@ import com.example.demo.OpportunityCategories.OpportunitiesCategoryRepository;
 import com.example.demo.OpportunityCategories.OpportunityCategories;
 import com.example.demo.OpportunitySkills.OpportunitySkills;
 import com.example.demo.OpportunitySkills.OpportunitySkillsRepository;
-import com.example.demo.Organization.Organization;
-import com.example.demo.Organization.OrganizationRepository;
+import com.example.demo.Organization.*;
 import com.example.demo.Region.Regions;
 import com.example.demo.Region.RegionsRepository;
 import com.example.demo.Sessions.Sessions;
@@ -24,6 +23,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -69,6 +69,7 @@ public class OpportunitiesService {
                 .title(request.getTitle())
                 .description(request.getDescription())
                 .region(region)
+                .approvalStatus(ApprovalStatus.pending)
                 .address(request.getAddress())
                 .isHighPriority(request.isHighPriority())
                 .createdAt(new Date())
@@ -128,6 +129,49 @@ public class OpportunitiesService {
         Opportunities updatedOpportunity = opportunitiesRepository.save(opportunity);
         return OpportunityDTO.fromEntity(updatedOpportunity);
     }
+
+    public List<?> getAllOpportunities(boolean isAdmin) {
+        List<Opportunities> opportunitiesList = opportunitiesRepository.findAll();
+
+        if (!isAdmin) {
+            opportunitiesList = opportunitiesList.stream()
+                    .filter(opp -> "APPROVED".equalsIgnoreCase(opp.getApprovalStatus().name()))
+                    .collect(Collectors.toList());
+        }
+
+        return opportunitiesList.stream()
+                .map(opp -> {
+                    if (isAdmin) {
+                        System.out.println("Admin is viewing opportunities.");
+                        return OpportunityDTO.fromEntity(opp);
+                    } else {
+                        System.out.println("Non-admin is viewing opportunities.");
+                        return OpportunityDTO2.fromEntity(opp);
+                    }
+                })
+                .collect(Collectors.toList());
+    }
+
+    public OpportunityDTO updateApprovalStatus(int id,HttpServletRequest httpServletRequest, String approvalStatus) {
+        Optional<Opportunities> opportunitiesOptional = opportunitiesRepository.findById(id);
+        if (opportunitiesOptional.isPresent()) {
+            Opportunities opportunities = opportunitiesOptional.get();
+            opportunities.setApprovalStatus(ApprovalStatus.valueOf(approvalStatus));
+            opportunities.setApprovedBy(usersRepository.findByEmail(httpServletRequest.getUserPrincipal().getName()).orElseThrow(() -> new RuntimeException("User not found")));
+            opportunities.setApprovalDate(new Date());
+            opportunitiesRepository.save(opportunities);
+            return OpportunityDTO.fromEntity(opportunities);
+        } else {
+            throw new RuntimeException("Organization not found");
+        }
+    }
+
+    public OpportunityDTO getOpportunityById(int id) {
+        Opportunities opportunity = opportunitiesRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Opportunity not found"));
+        return OpportunityDTO.fromEntity(opportunity);
+    }
+
 
     //TODO: modify date format
 }

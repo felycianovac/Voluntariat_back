@@ -3,6 +3,7 @@ package com.example.demo.Organization;
 
 import com.example.demo.User.UserService;
 import com.example.demo.User.Users;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -73,9 +74,10 @@ public class OrganizationController {
 
     public ResponseEntity<OrganizationDTO> updateApprovalStatus(
             @PathVariable int id,
+            HttpServletRequest httpRequest,
             @RequestBody OrganizationApprovalRequest approvalRequest) {
 
-        OrganizationDTO organization = organizationService.updateApprovalStatus(id, approvalRequest.getStatus());
+        OrganizationDTO organization = organizationService.updateApprovalStatus(id, httpRequest ,approvalRequest.getStatus());
         return ResponseEntity.ok(organization);
     }
 

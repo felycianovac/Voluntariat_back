@@ -4,6 +4,8 @@ import com.example.demo.Category.Categories;
 import com.example.demo.Region.Regions;
 import com.example.demo.Region.RegionsRepository;
 import com.example.demo.User.Users;
+import com.example.demo.User.UsersRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,6 +22,8 @@ public class OrganizationService {
     private OrganizationRepository organizationRepository;
     @Autowired
     private RegionsRepository regionsRepository;
+    @Autowired
+    private UsersRepository usersRepository;
 
     @Transactional
     public OrganizationResponse createOrganization(OrganizationRequest organizationRequest, Users user) {
@@ -93,11 +97,13 @@ public class OrganizationService {
         }
     }
 
-    public OrganizationDTO updateApprovalStatus(int organizationId, String approvalStatus) {
+    public OrganizationDTO updateApprovalStatus(int organizationId, HttpServletRequest request, String approvalStatus) {
         Optional<Organization> organizationOptional = organizationRepository.findById(organizationId);
         if (organizationOptional.isPresent()) {
             Organization organization = organizationOptional.get();
             organization.setApprovalStatus(ApprovalStatus.valueOf(approvalStatus));
+            organization.setApprovedBy(Objects.requireNonNull(usersRepository.findByEmail(request.getUserPrincipal().getName()).orElseThrow(() -> new RuntimeException("User not found"))));
+            organization.setApprovalDate(new java.util.Date());
             organizationRepository.save(organization);
             return OrganizationDTO.fromEntity(organization);
         } else {
