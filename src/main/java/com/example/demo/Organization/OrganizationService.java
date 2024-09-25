@@ -39,6 +39,7 @@ public class OrganizationService {
                 .website(organizationRequest.getWebsite())
                 .phoneNumber(organizationRequest.getPhoneNumber())
                 .createdBy(user)
+                .logo(organizationRequest.getLogo())
                 .createdAt(new java.util.Date())
                 .approvalStatus(ApprovalStatus.pending)
                 .organizationCategories(organizationRequest.getCategoryIds().stream().map(categoryId -> OrganizationCategories.builder().category(Categories.builder().categoryId(categoryId).build()).build()).collect(Collectors.toList()))
@@ -72,7 +73,7 @@ public class OrganizationService {
 //                .map(OrganizationDTO::fromEntity)
 //                .collect(Collectors.toList());
         return organizationRepository.findAll().stream()
-                .filter(org -> "APPROVED".equalsIgnoreCase(org.getApprovalStatus().name()))
+                .filter(org -> isAdmin || "APPROVED".equalsIgnoreCase(org.getApprovalStatus().name()))
                 .map(org -> {
                     if (isAdmin) {
                         System.out.println("isAdmin: " + isAdmin);

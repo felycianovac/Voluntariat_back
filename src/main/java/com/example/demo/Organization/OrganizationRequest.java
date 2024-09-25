@@ -16,6 +16,7 @@ public class OrganizationRequest {
     private String name;
     private String description;
     private String address;
+    private String logo;
     private int regionId;
     private List<Integer> categoryIds;
     private String website;
