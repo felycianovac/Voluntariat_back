@@ -2,6 +2,7 @@ package com.example.demo.Opportunities;
 
 
 import com.example.demo.Category.Categories;
+import com.example.demo.Category.CategoriesDTO;
 import com.example.demo.Category.CategoriesRepository;
 import com.example.demo.OpportunityCategories.OpportunitiesCategoryRepository;
 import com.example.demo.OpportunityCategories.OpportunityCategories;
@@ -165,6 +166,7 @@ public class OpportunitiesService {
             throw new RuntimeException("Organization not found");
         }
     }
+
 
     public OpportunityDTO getOpportunityById(int id) {
         Opportunities opportunity = opportunitiesRepository.findById(id)

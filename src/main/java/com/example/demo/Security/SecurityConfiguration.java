@@ -16,6 +16,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -29,6 +30,9 @@ public class SecurityConfiguration {
     @Autowired
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final AuthenticationProvider authenticationProvider;
+
+    @Autowired
+    private final ClientRegistrationRepository clientRegistrationRepository;
 
     @Bean
     public static PasswordEncoder myPasswordEncoder() {
@@ -66,8 +70,13 @@ public class SecurityConfiguration {
                         .requestMatchers("/opportunities/*").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/organizations/*/status").hasAnyAuthority("ADMIN")
                         .requestMatchers("api/organizations/*").authenticated()
+                        .requestMatchers("/api/login/oauth2").permitAll()
                         .requestMatchers("/admin/**").hasAnyAuthority("ADMIN")
                         .anyRequest().authenticated())
+                .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/api/login/oauth2")
+                        .defaultSuccessUrl("/api/auth/profile", true)
+                        .failureUrl("/login?error=true"))
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
