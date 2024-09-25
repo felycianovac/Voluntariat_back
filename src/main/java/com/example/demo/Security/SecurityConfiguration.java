@@ -72,6 +72,8 @@ public class SecurityConfiguration {
                         .requestMatchers("api/organizations/*").authenticated()
                         .requestMatchers("/api/login/oauth2").permitAll()
                         .requestMatchers("/admin/**").hasAnyAuthority("ADMIN")
+                        .requestMatchers("/api/regions").permitAll()
+                        .requestMatchers("/api/skills").permitAll()
                         .anyRequest().authenticated())
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/api/login/oauth2")
