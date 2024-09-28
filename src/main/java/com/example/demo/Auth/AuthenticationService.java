@@ -322,13 +322,13 @@ public class AuthenticationService {
         return UsersDTO2.fromEntity(updatedUser);
     }
 
-    public UsersDTO2 getProfile(HttpServletRequest httpRequest) {
+    public UserDTO4 getProfile(HttpServletRequest httpRequest) {
         String email = httpRequest.getUserPrincipal().getName();
 
         Users user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        return UsersDTO2.fromEntity(user);
+        return UserDTO4.fromEntity(user);
     }
 }
 

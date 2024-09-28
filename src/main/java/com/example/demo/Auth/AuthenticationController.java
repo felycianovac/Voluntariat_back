@@ -2,6 +2,7 @@ package com.example.demo.Auth;
 
 import com.example.demo.Auth.Profile.ProfilePictureRequest;
 import com.example.demo.Auth.Profile.ProfileRequest;
+import com.example.demo.User.UserDTO4;
 import com.example.demo.User.UsersDTO2;
 import com.example.demo.User.UsersRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -83,7 +84,7 @@ public class AuthenticationController {
     }
 
     @GetMapping()
-    public ResponseEntity<UsersDTO2> getProfile(
+    public ResponseEntity<UserDTO4> getProfile(
             HttpServletRequest httpRequest
     ) {
         return ResponseEntity.ok(authenticationService.getProfile(httpRequest));
