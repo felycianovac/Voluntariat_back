@@ -1,6 +1,5 @@
 package com.example.demo.Security;
 
-import com.example.demo.Auth.CustomOAuth2UserService;
 import com.example.demo.Auth.CustomOAuthSuccessHandler;
 import lombok.RequiredArgsConstructor;
 import org.apache.catalina.connector.Connector;
@@ -51,14 +50,15 @@ public class SecurityConfiguration {
         return new InMemoryUserDetailsManager(user);
     }
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomOAuth2UserService customOAuth2UserService) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http.csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.disable())
+//                .cors(cors -> cors.disable())
                 .requiresChannel(channel -> channel.anyRequest().requiresSecure())
                 .authorizeRequests(authorize -> authorize
                         .requestMatchers("/api/login/oauth2").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
                         .requestMatchers("/api/auth").authenticated()
+//                        .requestMatchers("/api/login/oauth2").permitAll()
                         .requestMatchers("/api/auth/register").permitAll()
                         .requestMatchers("/api/auth/confirm-email").permitAll()
                         .requestMatchers("/api/auth/login/admin").permitAll()
@@ -67,7 +67,7 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/auth/profile/profilePicture").authenticated()
                         .requestMatchers("api/organizations/*/logo").authenticated()
                         .requestMatchers("api/organizations/create").authenticated()
-                        .requestMatchers("api/organizations").authenticated()
+                        .requestMatchers("api/organizations").permitAll()
                         .requestMatchers("api/opportunities/create").authenticated()
                         .requestMatchers("api/opportunities/*/image").authenticated()
                         .requestMatchers("api/opportunities").permitAll()
@@ -81,8 +81,7 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/categories").permitAll()
                         .anyRequest().authenticated())
                 .oauth2Login(oauth2 -> oauth2
-                        .successHandler(customOAuthSuccessHandler))
-
+                                .successHandler(customOAuthSuccessHandler))
 //                        .clientRegistrationRepository(clientRegistrationRepository))
 
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))

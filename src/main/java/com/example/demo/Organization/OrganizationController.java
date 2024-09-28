@@ -60,6 +60,9 @@ public class OrganizationController {
 
     @GetMapping()
     public ResponseEntity<List<?>> getAllOrganizations(Authentication authentication) {
+        if (authentication == null) {
+            return ResponseEntity.ok(organizationService.getAllOrganizations(false));
+        }
         boolean isAdmin = authentication.getAuthorities().stream()
                 .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ADMIN"));
         System.out.println("isAdmin: " + isAdmin);

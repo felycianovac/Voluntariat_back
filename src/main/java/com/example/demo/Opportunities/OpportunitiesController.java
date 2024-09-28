@@ -41,6 +41,9 @@ public class OpportunitiesController {
 
     @GetMapping()
     public ResponseEntity<List<?>> getAllOpportunities(Authentication authentication) {
+        if (authentication == null) {
+            return ResponseEntity.ok(opportunitiesService.getAllOpportunities(false));
+        }
         boolean isAdmin = authentication.getAuthorities().stream()
                 .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ADMIN"));
         List<?> opportunities = opportunitiesService.getAllOpportunities(isAdmin);
