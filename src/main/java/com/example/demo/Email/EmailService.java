@@ -34,4 +34,24 @@ public class EmailService {
         }
     }
 
+    public void sendOtp(String email, String otp) {
+        try {
+            MimeMessage msg = javaMailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(msg, true);
+
+            helper.setFrom("epetitiimd@gmail.com");
+            helper.setTo(email);
+            msg.setSubject("Your OTP Code");
+            String htmlContent = "<h1>Your OTP Code</h1>" +
+                    "<p>Use the following OTP to complete your login:</p>" +
+                    "<h2>" + otp + "</h2>" +
+                    "<p>This OTP is valid for 5 minutes.</p>";
+            helper.setText(htmlContent, true);
+
+            javaMailSender.send(msg);
+        } catch (MessagingException e) {
+            System.out.println("Error sending OTP email: " + e.getMessage());
+        }
+    }
+
 }

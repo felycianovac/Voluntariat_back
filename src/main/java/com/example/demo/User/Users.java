@@ -58,6 +58,8 @@ public class Users implements UserDetails{
     private Date updatedAt;
     @Column(name = "is_first_login")
     private boolean isFirstLogin;
+    @Column(name = "mfa_enabled", nullable = false)
+    private boolean mfaEnabled = false;
 
     @OneToMany(mappedBy = "approvedBy", fetch = FetchType.EAGER)
     private List<Organization> approvedOrganizations;

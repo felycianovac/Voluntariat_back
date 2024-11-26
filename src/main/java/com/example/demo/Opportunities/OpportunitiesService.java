@@ -20,6 +20,7 @@ import com.example.demo.User.UsersRepository;
 import com.example.demo.VolunteerSkills.VolunteerSkills;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -172,6 +173,34 @@ public class OpportunitiesService {
         Opportunities opportunity = opportunitiesRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Opportunity not found"));
         return OpportunityDTO.fromEntity(opportunity);
+    }
+
+    public List<OpportunityDTO> getOpportunitiesByOrganizationId(int organizationId, Authentication authentication) {
+        boolean isAdmin = authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ADMIN"));
+
+        String currentUserEmail = authentication != null ? authentication.getName() : null;
+
+        List<Opportunities> opportunities;
+
+        if (isAdmin) {
+            opportunities = opportunitiesRepository.findByOrganization_OrganizationId(organizationId);
+        } else if (currentUserEmail != null) {
+            opportunities = opportunitiesRepository.findByOrganization_OrganizationId(organizationId).stream()
+                    .filter(opportunity ->
+                            opportunity.getApprovalStatus() == ApprovalStatus.approved ||
+                                    opportunity.getCreatedByUser().getEmail().equals(currentUserEmail))
+                    .collect(Collectors.toList());
+        } else {
+            opportunities = opportunitiesRepository.findByOrganization_OrganizationId(organizationId).stream()
+                    .filter(opportunity -> opportunity.getApprovalStatus() == ApprovalStatus.approved)
+                    .collect(Collectors.toList());
+        }
+
+        // Convert to DTO
+        return opportunities.stream()
+                .map(OpportunityDTO::fromEntity)
+                .collect(Collectors.toList());
     }
 
 

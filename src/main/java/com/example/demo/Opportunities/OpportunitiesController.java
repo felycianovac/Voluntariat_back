@@ -69,6 +69,14 @@ public class OpportunitiesController {
         return ResponseEntity.ok(opportunityDTO);
     }
 
+    @GetMapping("/organization/{organizationId}")
+    public ResponseEntity<List<OpportunityDTO>> getOpportunitiesByOrganizationId(
+            @PathVariable int organizationId,
+            Authentication authentication) {
+        List<OpportunityDTO> opportunities = opportunitiesService.getOpportunitiesByOrganizationId(organizationId, authentication);
+        return ResponseEntity.ok(opportunities);
+    }
+
 
 
 }

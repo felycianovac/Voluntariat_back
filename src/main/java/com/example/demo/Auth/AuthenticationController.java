@@ -2,15 +2,17 @@ package com.example.demo.Auth;
 
 import com.example.demo.Auth.Profile.ProfilePictureRequest;
 import com.example.demo.Auth.Profile.ProfileRequest;
-import com.example.demo.User.UserDTO4;
-import com.example.demo.User.UsersDTO2;
-import com.example.demo.User.UsersRepository;
+import com.example.demo.User.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import static com.example.demo.User.Roles.user;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -52,7 +54,7 @@ public class AuthenticationController {
             @RequestBody LoginRequest request,
             HttpServletResponse response
     ) {
-        System.out.println("Admin login endpoint reached"); // Add logging
+        System.out.println("Admin login endpoint reached");
 
         return ResponseEntity.ok(authenticationService.loginAdmin(request, response));
     }
@@ -90,6 +92,35 @@ public class AuthenticationController {
         return ResponseEntity.ok(authenticationService.getProfile(httpRequest));
     }
 
+//    @PostMapping("/send-otp")
+//    public ResponseEntity<String> sendOtp(@RequestParam String email) {
+//        authenticationService.generateAndSendOtp(email);
+//        return ResponseEntity.ok("OTP sent to your email.");
+//    }
+
+    @PostMapping("/validate-otp")
+    public ResponseEntity<LoginResponse> validateOtp(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            @RequestParam String otp
+    ) {
+        return ResponseEntity.ok(authenticationService.validateOtpAndLogin(request,response, otp));
+
+
+//        return ResponseEntity.ok(new LoginResponse("Login successful", userDTO, false));
+    }
+
+
+    @PatchMapping("/mfa")
+    public ResponseEntity<String> toggleMfa(@RequestParam boolean enable, Authentication authentication) {
+        if (authentication == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+        }
+
+        String email = authentication.getName();
+        authenticationService.toggleMfa(email, enable);
+        return ResponseEntity.ok("MFA " + (enable ? "enabled" : "disabled") + " successfully.");
+    }
 
 
 

@@ -1,5 +1,6 @@
 package com.example.demo.Auth;
 
+import com.example.demo.Auth.MFA.OtpDetails;
 import com.example.demo.Auth.Profile.ProfilePictureRequest;
 import com.example.demo.Auth.Profile.ProfileRequest;
 import com.example.demo.Email.EmailService;
@@ -14,12 +15,16 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import java.util.Date;
 import java.util.List;
@@ -37,6 +42,8 @@ public class AuthenticationService {
     private final JwtService jwtService;
     private final RegionsRepository regionRepository;
     private final SkillsRepository skillsRepository;
+    private final ConcurrentHashMap<String, OtpDetails> otpStore = new ConcurrentHashMap<>();
+
 
     public RegisterResponse register(RegisterRequest request, HttpServletResponse response, HttpServletRequest httpRequest) {
         Optional<Users> userOptional = userRepository.findByEmail(request.getEmail());
@@ -165,6 +172,17 @@ public class AuthenticationService {
         response.addHeader(HttpHeaders.SET_COOKIE, emailCookie.toString());
     }
 
+    private void setEmailInCookie(HttpServletResponse response, String email) {
+        ResponseCookie emailCookie = ResponseCookie.from("user_email", email)
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(60 * 60 * 24)
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, emailCookie.toString());
+    }
+
     private String extractUserEmailFromRequest(HttpServletRequest request) {
         Cookie cookie[] = request.getCookies();
         for(Cookie c : cookie){
@@ -180,22 +198,29 @@ public class AuthenticationService {
         Optional<Users> userOptional = userRepository.findByEmail(request.getEmail());
 
         if (userOptional.isEmpty()) {
-            return new LoginResponse("User not found", null);
+            return new LoginResponse("User not found", null, false);
         }
 
         Users user = userOptional.get();
 
         if (!user.getAuthorities().stream()
                 .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("USER"))) {
-            return new LoginResponse("Access denied: insufficient permissions", null);
+            return new LoginResponse("Access denied: insufficient permissions", null, false);
         }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            return new LoginResponse("Invalid credentials", null);
+            return new LoginResponse("Invalid credentials", null, false);
         }
 
         if (!user.isEnabled()) {
-            return new LoginResponse("Account not verified", null);
+            return new LoginResponse("Account not verified", null, false);
+        }
+
+        if (user.isMfaEnabled()) {
+            setEmailInCookie(response, user.getEmail());
+            generateAndSendOtp(user);
+
+            return new LoginResponse("MFA token sent to your email. Please verify to complete login.", null, true);
         }
 
         String jwtToken = jwtService.generateToken(user);
@@ -208,7 +233,7 @@ public class AuthenticationService {
             userRepository.save(user);
         }
 
-        return new LoginResponse("Login successful", userDTO);
+        return new LoginResponse("Login successful", userDTO, user.isMfaEnabled());
     }
 
     private void setJwtTokenInCookie(HttpServletResponse response, String jwtToken) {
@@ -329,6 +354,50 @@ public class AuthenticationService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         return UserDTO4.fromEntity(user);
+    }
+
+
+    private void generateAndSendOtp(Users user) {
+        String otp = RandomStringUtils.randomNumeric(6);
+        long expiry = System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(5);
+
+        otpStore.put(user.getEmail(), new OtpDetails(otp, expiry));
+
+        emailService.sendOtp(user.getEmail(), otp);
+    }
+
+
+    public LoginResponse validateOtpAndLogin(HttpServletRequest request,HttpServletResponse response, String otp) {
+        String email = extractUserEmailFromRequest(request);
+        boolean isValid;
+        OtpDetails otpDetails = otpStore.get(email);
+
+        if (otpDetails == null || System.currentTimeMillis() > otpDetails.getExpiry()) {
+            otpStore.remove(email);
+            isValid = false;
+            return null;
+        }
+
+        isValid = otpDetails.getOtp().equals(otp);
+        if (isValid) {
+            otpStore.remove(email);
+            String jwtToken = jwtService.generateToken(userRepository.findByEmail(email).get());
+            setJwtTokenInCookie(response, jwtToken);
+            UserDTO userDTO = UserDTO.fromEntity(userRepository.findByEmail(email).get());
+            return new LoginResponse("Login successful", userDTO, true);
+        }
+        return null;
+
+
+    }
+
+
+
+    public void toggleMfa(String email, boolean enableMfa) {
+        Users user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setMfaEnabled(enableMfa);
+        userRepository.save(user);
     }
 }
 
