@@ -26,16 +26,19 @@ public class ApplicationFiles {
     @JoinColumn(name = "application_id")
     private Applications application;
 
-    @Column(name = "file_path")
-    private String filePath;
+    @Column(name = "file_link")
+    private String fileLink;
 
-    @Column(name = "file_name")
-    private String fileName;
-
-    @Column(name = "file_type")
-    private String fileType;
-
-    @Column(name = "uploaded_at")
-    private Date uploadedAt;
+//    @Column(name = "file_path")
+//    private String filePath;
+//
+//    @Column(name = "file_name")
+//    private String fileName;
+//
+//    @Column(name = "file_type")
+//    private String fileType;
+//
+//    @Column(name = "uploaded_at")
+//    private Date uploadedAt;
 
 }

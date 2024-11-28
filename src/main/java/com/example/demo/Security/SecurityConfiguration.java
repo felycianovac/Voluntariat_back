@@ -81,6 +81,7 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/categories").permitAll()
                         .requestMatchers("api/opportunities/organization/*").permitAll()
                         .requestMatchers("api/auth/validate-otp").permitAll()
+                        .requestMatchers("/api/applications/*").authenticated()
                         .anyRequest().authenticated())
                 .oauth2Login(oauth2 -> oauth2
                                 .successHandler(customOAuthSuccessHandler))

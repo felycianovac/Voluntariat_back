@@ -13,6 +13,7 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SessionsDTO {
+    private int id;
     private Date date;
     private Date startTime;
     private Date endTime;
@@ -20,6 +21,7 @@ public class SessionsDTO {
 
     public static SessionsDTO fromEntity(Sessions session) {
         return SessionsDTO.builder()
+                .id(session.getSessionId())
                 .date(session.getSessionDate())
                 .startTime(session.getSessionStartTime())
                 .endTime(session.getSessionEndTime())

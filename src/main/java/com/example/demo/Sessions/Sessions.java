@@ -1,6 +1,7 @@
 package com.example.demo.Sessions;
 
 
+import com.example.demo.ApplicationSessions.ApplicationSessions;
 import com.example.demo.Opportunities.Opportunities;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -9,6 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
+import java.util.List;
 
 @Data
 @Builder
@@ -34,4 +36,7 @@ public class Sessions {
     @ManyToOne
     @JoinColumn(name = "opportunity_id")
     private Opportunities opportunity;
+
+    @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ApplicationSessions> applicationSessions;
 }

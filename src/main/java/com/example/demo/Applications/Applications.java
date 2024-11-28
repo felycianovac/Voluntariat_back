@@ -1,6 +1,9 @@
 package com.example.demo.Applications;
 
+import com.example.demo.ApplicationFiles.ApplicationFiles;
+import com.example.demo.ApplicationSessions.ApplicationSessions;
 import com.example.demo.Opportunities.Opportunities;
+import com.example.demo.Sessions.Sessions;
 import com.example.demo.User.Users;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -9,6 +12,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
+import java.util.List;
 
 @Data
 @Builder
@@ -35,9 +39,9 @@ public class Applications {
 //    @JoinColumn(name = "session_id")
 //    private OpportunitySessions session;
 //
-//    @Enumerated(EnumType.STRING)
-//    @Column(name = "status")
-//    private ApplicationStatus status; // Assuming an enum named ApplicationStatus with values: PENDING, APPROVED, DECLINED, COMPLETED
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private ApplicationStatus status; // Assuming an enum named ApplicationStatus with values: PENDING, APPROVED, DECLINED, COMPLETED
 
     @Column(name = "motivation_text", columnDefinition = "TEXT")
     private String motivationText;
@@ -47,5 +51,14 @@ public class Applications {
 
     @Column(name = "updated_at")
     private Date updatedAt;
+
+    @Column(name = "approval_date")
+    private Date approvalDate;
+
+    @OneToMany(mappedBy = "application", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ApplicationSessions> applicationSessions;
+
+    @OneToMany(mappedBy = "application", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ApplicationFiles> applicationFiles;
 
 }

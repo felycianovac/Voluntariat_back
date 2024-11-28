@@ -82,6 +82,7 @@ public class OpportunitiesService {
         List<Sessions> sessionsList = request.getSessions().stream()
                 .map(sessionDTO -> Sessions.builder()
                         .opportunity(savedOpportunity)
+//                        .sessionId(sessionDTO.getId()) //???????????
                         .sessionDate(sessionDTO.getDate())
                         .sessionStartTime(sessionDTO.getStartTime())
                         .sessionEndTime(sessionDTO.getEndTime())

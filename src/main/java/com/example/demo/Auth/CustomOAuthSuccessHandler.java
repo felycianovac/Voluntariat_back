@@ -62,11 +62,12 @@ public class CustomOAuthSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         ResponseCookie cookie = ResponseCookie.from("auth_token", jwtToken)
                 .httpOnly(true)
                 .secure(true)
+                .sameSite("None") // Required for cross-origin cookies
                 .path("/")
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
-        response.sendRedirect("https://localhost:8443/api/auth");
+        response.sendRedirect("https://27da7eb975cb1f.lhr.life");
     }
 
 }
