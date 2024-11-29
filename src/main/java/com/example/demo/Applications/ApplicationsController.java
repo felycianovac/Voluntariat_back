@@ -35,4 +35,47 @@ public class ApplicationsController {
         String currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
         return ResponseEntity.ok(applicationsService.getApplicationsByOpportunityId(oppId, currentUserEmail));
     }
+
+    @PutMapping("/{applicationId}/status")
+    public ResponseEntity<ApplicationResponseDTO> updateApplicationStatus(
+            @PathVariable int applicationId,
+            @RequestBody ApplicationStatusUpdateRequest request,
+            Authentication authentication) {
+
+        if (authentication == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        String currentUserEmail = authentication.getName();
+        ApplicationResponseDTO response = applicationsService.updateApplicationStatus(applicationId, request, currentUserEmail);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/my")
+    public ResponseEntity<List<ApplicationResponseDTO>> getMyApplications(Authentication authentication) {
+        if (authentication == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        String applicantEmail = authentication.getName();
+        List<ApplicationResponseDTO> applications = applicationsService.getApplicationsByApplicant(applicantEmail);
+        return ResponseEntity.ok(applications);
+    }
+
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApplicationResponseDTO> getApplicationById(
+            @PathVariable int id,
+            Authentication authentication) {
+
+        if (authentication == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        String currentUserEmail = authentication.getName();
+        ApplicationResponseDTO application = applicationsService.getApplicationById(id, currentUserEmail);
+        return ResponseEntity.ok(application);
+    }
+
+
 }

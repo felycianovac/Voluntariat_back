@@ -13,7 +13,7 @@ import java.util.List;
 @Builder
 public class ApplicationResponseDTO {
     private int id;
-    private UserDTO3 user;
+    private UserDTO3 applicant;
     private OpportunityDTO2 opportunity;
     private String text;
     private List<String> files;

@@ -165,7 +165,7 @@ public class ApplicationService {
 
         return applications.stream().map(application -> ApplicationResponseDTO.builder()
                 .id(application.getId())
-                .user(UserDTO3.builder()
+                .applicant(UserDTO3.builder()
                         .id(application.getVolunteer().getUserId())
                         .firstName(application.getVolunteer().getFirstName())
                         .lastName(application.getVolunteer().getLastName())
@@ -192,4 +192,136 @@ public class ApplicationService {
         ).collect(Collectors.toList());
     }
 
+    @Transactional
+    public ApplicationResponseDTO updateApplicationStatus(int applicationId, ApplicationStatusUpdateRequest request, String currentUserEmail) {
+        Applications application = applicationsRepository.findById(applicationId)
+                .orElseThrow(() -> new RuntimeException("Application not found"));
+
+        Opportunities opportunity = application.getOpportunity();
+
+        Users currentUser = usersRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!opportunity.getCreatedByUser().equals(currentUser) &&
+                !opportunity.getOrganization().getCreatedBy().equals(currentUser)) {
+            throw new RuntimeException("Access denied: You do not have permission to update this application.");
+        }
+
+        application.setStatus(ApplicationStatus.valueOf(request.getStatus().toUpperCase()));
+        if (request.getStatus().equalsIgnoreCase("APPROVED")) {
+            application.setApprovalDate(new Date());
+        } else {
+            application.setApprovalDate(null);
+        }
+        application.setUpdatedAt(new Date());
+
+        applicationsRepository.save(application);
+
+        return ApplicationResponseDTO.builder()
+                .id(application.getId())
+                .applicant(UserDTO3.builder()
+                        .id(application.getVolunteer().getUserId())
+                        .firstName(application.getVolunteer().getFirstName())
+                        .lastName(application.getVolunteer().getLastName())
+                        .build())
+                .opportunity(OpportunityDTO2.fromEntity(application.getOpportunity()))
+                .text(application.getMotivationText())
+                .files(application.getApplicationFiles().stream()
+                        .map(file -> file.getFileLink())
+                        .collect(Collectors.toList()))
+                .sessions(application.getApplicationSessions().stream()
+                        .map(appSession -> SessionsDTO.builder()
+                                .id(appSession.getSession().getSessionId())
+                                .date(appSession.getSession().getSessionDate())
+                                .startTime(appSession.getSession().getSessionStartTime())
+                                .endTime(appSession.getSession().getSessionEndTime())
+                                .spotsLeft(appSession.getSession().getSpotsLeft())
+                                .build())
+                        .collect(Collectors.toList()))
+                .createdAt(application.getCreatedAt())
+                .updatedAt(application.getUpdatedAt())
+                .approvalStatus(application.getStatus().name().toLowerCase())
+                .approvalDate(application.getApprovalDate())
+                .build();
+    }
+
+    @Transactional
+    public List<ApplicationResponseDTO> getApplicationsByApplicant(String applicantEmail) {
+        Users applicant = usersRepository.findByEmail(applicantEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<Applications> applications = applicationsRepository.findByVolunteer(applicant);
+        return applications.stream().map(application -> ApplicationResponseDTO.builder()
+                        .id(application.getId())
+                        .applicant(UserDTO3.builder()
+                                .id(application.getVolunteer().getUserId())
+                                .firstName(application.getVolunteer().getFirstName())
+                                .lastName(application.getVolunteer().getLastName())
+                                .build())
+                        .opportunity(OpportunityDTO2.fromEntity(application.getOpportunity()))
+                        .text(application.getMotivationText())
+                        .files(application.getApplicationFiles().stream()
+                                .map(ApplicationFiles::getFileLink)
+                                .collect(Collectors.toList()))
+                        .sessions(application.getApplicationSessions().stream()
+                                .map(appSession -> SessionsDTO.builder()
+                                        .id(appSession.getSession().getSessionId())
+                                        .date(appSession.getSession().getSessionDate())
+                                        .startTime(appSession.getSession().getSessionStartTime())
+                                        .endTime(appSession.getSession().getSessionEndTime())
+                                        .spotsLeft(appSession.getSession().getSpotsLeft())
+                                        .build())
+                                .collect(Collectors.toList()))
+                        .createdAt(application.getCreatedAt())
+                        .updatedAt(application.getUpdatedAt())
+                        .approvalStatus(application.getStatus().name().toLowerCase())
+                        .approvalDate(application.getApprovalDate())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public ApplicationResponseDTO getApplicationById(int applicationId, String currentUserEmail) {
+        Applications application = applicationsRepository.findById(applicationId)
+                .orElseThrow(() -> new RuntimeException("Application not found"));
+
+        Users volunteer = application.getVolunteer();
+
+        Opportunities opportunity = application.getOpportunity();
+        Users opportunityOwner = opportunity.getCreatedByUser();
+
+        if (!volunteer.getEmail().equals(currentUserEmail) && !opportunityOwner.getEmail().equals(currentUserEmail)) {
+            throw new RuntimeException("Access denied: You do not have permission to view this application.");
+        }
+
+        return ApplicationResponseDTO.builder()
+                .id(application.getId())
+                .applicant(UserDTO3.builder()
+                        .id(volunteer.getUserId())
+                        .firstName(volunteer.getFirstName())
+                        .lastName(volunteer.getLastName())
+                        .build())
+                .opportunity(OpportunityDTO2.fromEntity(opportunity))
+                .text(application.getMotivationText())
+                .files(application.getApplicationFiles().stream()
+                        .map(ApplicationFiles::getFileLink)
+                        .collect(Collectors.toList()))
+                .sessions(application.getApplicationSessions().stream()
+                        .map(appSession -> SessionsDTO.builder()
+                                .id(appSession.getSession().getSessionId())
+                                .date(appSession.getSession().getSessionDate())
+                                .startTime(appSession.getSession().getSessionStartTime())
+                                .endTime(appSession.getSession().getSessionEndTime())
+                                .spotsLeft(appSession.getSession().getSpotsLeft())
+                                .build())
+                        .collect(Collectors.toList()))
+                .createdAt(application.getCreatedAt())
+                .updatedAt(application.getUpdatedAt())
+                .approvalStatus(application.getStatus().name().toLowerCase())
+                .approvalDate(application.getApprovalDate())
+                .build();
+    }
+
+
 }
+
