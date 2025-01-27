@@ -25,7 +25,7 @@ public class CustomOAuthSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     private JwtService jwtService;
 
     @Autowired
-    private UsersRepository usersRepository;  // Inject the repository to save user details
+    private UsersRepository usersRepository;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -62,7 +62,7 @@ public class CustomOAuthSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         ResponseCookie cookie = ResponseCookie.from("auth_token", jwtToken)
                 .httpOnly(true)
                 .secure(true)
-                .sameSite("None") // Required for cross-origin cookies
+                .sameSite("None")
                 .path("/")
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());

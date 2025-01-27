@@ -61,10 +61,10 @@ public class SecurityConfiguration {
 //                .cors(cors -> cors.disable())
                 .requiresChannel(channel -> channel.anyRequest().requiresSecure())
                 .authorizeRequests(authorize -> authorize
-                        .requestMatchers("/api/login/oauth2").permitAll()
+                        .requestMatchers("/api/auth/oauth2").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
                         .requestMatchers("/api/auth").authenticated()
-                        .requestMatchers("/api/login/oauth2").permitAll()
+                        .requestMatchers("/api/auth/oauth2").permitAll()
                         .requestMatchers("/api/auth/register").permitAll()
                         .requestMatchers("/api/auth/confirm-email").permitAll()
                         .requestMatchers("/api/auth/login/admin").permitAll()
@@ -93,13 +93,13 @@ public class SecurityConfiguration {
 
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
                 .oauth2Login(oauth2 -> oauth2
-                        .loginPage("/api/login/oauth2")
+                        .loginPage("/api/auth/oauth2")
                         .successHandler(customOAuthSuccessHandler))
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, authException) -> {
                             String path = request.getRequestURI();
-                            if (path.startsWith("/api/login/oauth2")) {
-                                response.sendRedirect("/api/login/oauth2");
+                            if (path.startsWith("/api/auth/oauth2")) {
+                                response.sendRedirect("/api/auth/oauth2");
                             } else {
                                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                                 response.getWriter().write("Unauthorized");

@@ -1,0 +1,44 @@
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8443:8443"
+    environment:
+      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+      - SERVER_SSL_KEY_STORE=/app/resources/keystore.p12
+      - SERVER_SSL_KEY_STORE_PASSWORD=${SERVER_SSL_KEYSTORE_PASSWORD}
+      - SERVER_SSL_KEY_STORE_TYPE=${SERVER_SSL_KEYSTORE_TYPE}
+      - SERVER_SSL_KEY_ALIAS=${SERVER_SSL_KEYSTORE_ALIAS}
+      - SPRING_OAUTH_CLIENT_ID=${SPRING_OAUTH_CLIENT_ID}
+      - SPRING_OAUTH_CLIENT_SECRET=${SPRING_OAUTH_CLIENT_SECRET}
+    volumes:
+      - ./src/main/resources:/app/resources
+    depends_on:
+      - db
+      - redis
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: ${SPRING_DATASOURCE_USERNAME}
+      POSTGRES_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      POSTGRES_DB: voluntariat
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+volumes:
+  db_data:
