@@ -67,7 +67,7 @@ public class CustomOAuthSuccessHandler extends SimpleUrlAuthenticationSuccessHan
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
-        response.sendRedirect("https://27da7eb975cb1f.lhr.life");
+//        response.sendRedirect("https://27da7eb975cb1f.lhr.life");
     }
 
 }

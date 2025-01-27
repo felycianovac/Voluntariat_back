@@ -1,11 +1,13 @@
 package com.example.demo.Security;
 
+import com.example.demo.Auth.TokenBlackListService;
 import com.example.demo.User.Users;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
@@ -20,6 +22,8 @@ import java.util.function.Function;
 public class JwtService {
 
     private static final String SECRET_KEY = "XvRdeFdXDRmYG9YJg7QXv64TaPzzvExnjZCuH2kyuhNqxqFvjySCAmmnpTfT7fjc";
+    @Autowired
+    private TokenBlackListService tokenBlackListService;
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
@@ -67,7 +71,7 @@ public class JwtService {
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token) && !tokenBlackListService.isTokenBlacklisted(token) );
     }
 
     private boolean isTokenExpired(String token) {
@@ -86,4 +90,7 @@ public class JwtService {
         byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
         return Keys.hmacShaKeyFor(keyBytes);
     }
+
+
+
 }

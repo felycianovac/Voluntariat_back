@@ -1,6 +1,7 @@
 package com.example.demo.Security;
 
 import com.example.demo.Auth.CustomOAuthSuccessHandler;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.apache.catalina.connector.Connector;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,15 +55,16 @@ public class SecurityConfiguration {
     }
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http.csrf(csrf -> csrf
-                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
+//        return http.csrf(csrf -> csrf
+//                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
+        return http.csrf(csrf -> csrf.disable())
 //                .cors(cors -> cors.disable())
                 .requiresChannel(channel -> channel.anyRequest().requiresSecure())
                 .authorizeRequests(authorize -> authorize
                         .requestMatchers("/api/login/oauth2").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
                         .requestMatchers("/api/auth").authenticated()
-//                        .requestMatchers("/api/login/oauth2").permitAll()
+                        .requestMatchers("/api/login/oauth2").permitAll()
                         .requestMatchers("/api/auth/register").permitAll()
                         .requestMatchers("/api/auth/confirm-email").permitAll()
                         .requestMatchers("/api/auth/login/admin").permitAll()
@@ -87,11 +89,23 @@ public class SecurityConfiguration {
                         .requestMatchers("api/auth/validate-otp").permitAll()
                         .requestMatchers("/api/applications/*").authenticated()
                         .anyRequest().authenticated())
-                .oauth2Login(oauth2 -> oauth2
-                                .successHandler(customOAuthSuccessHandler))
 //                        .clientRegistrationRepository(clientRegistrationRepository))
 
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
+                .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/api/login/oauth2")
+                        .successHandler(customOAuthSuccessHandler))
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            String path = request.getRequestURI();
+                            if (path.startsWith("/api/login/oauth2")) {
+                                response.sendRedirect("/api/login/oauth2");
+                            } else {
+                                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                                response.getWriter().write("Unauthorized");
+                            }
+                        })
+                )
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();

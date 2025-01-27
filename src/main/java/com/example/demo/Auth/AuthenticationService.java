@@ -11,6 +11,8 @@ import com.example.demo.Skills.Skills;
 import com.example.demo.Skills.SkillsRepository;
 import com.example.demo.User.*;
 import com.example.demo.VolunteerSkills.VolunteerSkills;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -42,6 +44,7 @@ public class AuthenticationService {
     private final JwtService jwtService;
     private final RegionsRepository regionRepository;
     private final SkillsRepository skillsRepository;
+    private final TokenBlackListService tokenBlackListService;
     private final ConcurrentHashMap<String, OtpDetails> otpStore = new ConcurrentHashMap<>();
 
 
@@ -271,23 +274,47 @@ public class AuthenticationService {
         return new AdminResponse("Login successful", adminDTO);
     }
 
-    public LogoutResponse logout(HttpServletResponse response) {
+    public LogoutResponse logout(HttpServletResponse response, HttpServletRequest request) {
+        String token = null;
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("auth_token".equals(cookie.getName())) {
+                    token = cookie.getValue();
+                    break;
+                }
+            }
+        }
+
+        if (token != null) {
+            try {
+                Date expirationDate = jwtService.extractClaim(token, Claims::getExpiration);
+
+                if (jwtService.isTokenValid(token, null)) {
+                    long expirationTimeMillis = expirationDate.getTime();
+                    tokenBlackListService.blacklistToken(token, expirationTimeMillis);
+                }
+            } catch (Exception e) {
+                System.out.println("Invalid token during logout: " + e.getMessage());
+            }
+        }
+
         ResponseCookie tokenCookie = ResponseCookie.from("auth_token", "")
-                .httpOnly(false)
+                .httpOnly(true)
                 .secure(true)
                 .path("/")
                 .maxAge(0)
                 .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, tokenCookie.toString());
-
         return new LogoutResponse("Logout successful");
     }
+
+
 
     public UsersDTO2 updateProfile(ProfileRequest request, HttpServletRequest httpRequest) {
         String email = request.getEmail();
 
-        // Find the user in the database by email
         Users user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -320,15 +347,12 @@ public class AuthenticationService {
                     })
                     .collect(Collectors.toList());
 
-            // Clear the old skills and set new ones
             user.getVolunteerSkills().clear();
             user.getVolunteerSkills().addAll(newSkills);
         }
 
-        // Save the updated user
         Users updatedUser = userRepository.save(user);
 
-        // Return the updated user DTO
         return UsersDTO2.fromEntity(updatedUser);
     }
 

@@ -61,9 +61,10 @@ public class AuthenticationController {
 
     @PostMapping("/logout")
     public ResponseEntity<LogoutResponse> logout(
-            HttpServletResponse response
+            HttpServletResponse response,
+            HttpServletRequest request
     ) {
-        return ResponseEntity.ok(authenticationService.logout(response));
+        return ResponseEntity.ok(authenticationService.logout(response, request));
     }
 
     @PatchMapping("/profile")
