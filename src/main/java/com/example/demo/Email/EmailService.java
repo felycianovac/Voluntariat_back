@@ -24,7 +24,7 @@ public class EmailService {
             helper.setFrom("epetitiimd@gmail.com");
             helper.setTo(email);
 
-            String confirmationLink = "URL?token=" + token; //replace here
+            String confirmationLink = "https://localhost:3000/auth/confirm-email?token=" + token; //replace here
 //            msg.setSubject("Verification Email");
             msg.setSubject("Confirmare Email - Voluntariat");
             String htmlContent =
@@ -159,7 +159,7 @@ public class EmailService {
                             "</head>" +
                             "<body>" +
                             "  <div class='logo'>" +
-                            "    <img src='https://voluntar.md/img/logo.png' alt='Voluntariat Logo' />" +
+                            "    <img src='https://utfs.io/f/dRSi38AMVNToAegFxmhWOTmFZrK6ksGxPtzVjaI74Sy9qNgn' alt='Voluntariat Logo' />" +
                             "  </div>" +
                             "  <div class='content'>" +
                             "    <h1>Verificare Email</h1>" +

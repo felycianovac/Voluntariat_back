@@ -13,8 +13,8 @@ public class CorsConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("https://27da7eb975cb1f.lhr.life"));
-                configuration.addAllowedOriginPattern("*"); // Should be avoided if credentials are allowed
+        configuration.setAllowedOrigins(List.of("https://localhost:3000"));
+                configuration.addAllowedOriginPattern("*");
 
         configuration.addAllowedMethod("*");
         configuration.addAllowedOriginPattern("*");
